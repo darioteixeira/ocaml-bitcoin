@@ -1,0 +1,355 @@
+(********************************************************************************)
+(*	Bitcoin.mli
+	Copyright (c) 2012 Dario Teixeira (dario.teixeira@yahoo.com)
+*)
+(********************************************************************************)
+
+(**	OCaml interface to the official Bitcoin client API.
+*)
+
+(********************************************************************************)
+(**	{1 Exceptions}								*)
+(********************************************************************************)
+
+exception Unspecified_connection			(** Raised when connection parameter is not given and no default connection exists. *)
+exception Bitcoin_error of int * string			(** Error reported by the Bitcoin client. *)
+exception Internal_error of int * string		(** Unexpected response from the Bitcoin client *)
+exception Httpclient_error of exn			(** Connection error reported by the {!HTTPCLIENT} *)
+
+
+(********************************************************************************)
+(**	{1 Type definitions}							*)
+(********************************************************************************)
+
+type address_t = string					(** Bitcoin address (hash of the public portion of public/private ECDSA keypair) *)
+type account_t = [ `Default | `Named of string ]	(** Besides the default account, one may also create named accounts *)
+type amount_t = int64					(** Amount in BTC, represented as a multiple of Bitcoin's base unit (= 10 nanoBTC).*)
+type txid_t = string					(** Transaction identifier *)
+type blkhash_t = string					(** Block hash *)
+type priv_t = string					(** Private portion of public/private ECDSA keypair *)
+type sig_t = string					(** Message signature *)
+type sigcomp_t = [ `All | `None | `Single ]		(** How to compute signature hash *)
+type hextx_t = string					(** Hex representation of raw transaction *)
+type hexspk_t = string					(** Hex representation of script public key *)
+type hexblk_t = string					(** Hex representation of block data *)
+type hexwork_t = string					(** Hex representation of mining work data *)
+type assoc_t = (string * Yojson.Safe.json) list		(** Association list *)
+
+type conn_t =
+	{
+	inet_addr: Unix.inet_addr;
+	host: string;
+	port: int;
+	username: string;				(* Should match [rpcuser] value in $HOME/.bitcoin/bitcoin.conf *)
+	password: string;				(* Should match [rpcpassword] value in $HOME/.bitcoin/bitcoin.conf *)
+	}
+
+
+(********************************************************************************)
+(**	{1 Public module types}							*)
+(********************************************************************************)
+
+(**	Interface that any module offering HTTP POST client calls must obey.
+	Note that the module may require POST calls to be wrapped under a
+	custom monad, which must also be provided (use the identity monad
+	if an actual monad is not required).
+*)
+module type HTTPCLIENT =
+sig
+	module Monad:
+	sig
+		type 'a t
+
+		val return: 'a -> 'a t
+		val fail: exn -> 'a t
+		val bind: 'a t -> ('a -> 'b t) -> 'b t
+		val catch: (unit -> 'a t) -> (exn -> 'a t) -> 'a t
+	end
+
+	val post_string:
+		headers:(string * string) list ->
+		inet_addr:Unix.inet_addr ->
+		host:string ->
+		port:int ->
+		uri:string ->
+		string ->
+		string Monad.t
+end
+
+
+(**	Module encapsulating all connection information.
+*)
+module type CONNECTION =
+sig
+	val default: conn_t option
+end
+
+
+(**	Actual engine offering the Bitcoin API.
+*)
+module type ENGINE =
+sig
+	type 'a monad_t
+
+	val backupwallet: ?conn:conn_t -> string -> unit monad_t
+	(** Safely backs up wallet file to the given destination, which can be either a directory or a path with filename. *)
+
+	val createrawtransaction: ?conn:conn_t -> (txid_t * int) list -> (address_t * amount_t) list -> hextx_t monad_t
+	(** [createrawtransaction inputs outputs] creates a raw transaction that transfers the given inputs
+	    (a list of transaction IDs and output indices) to the given outputs (a list of addresses and
+	    amounts).  This function returns the hex-encoded transaction, but neither does it transmit the
+	    transaction to the network nor does it store the transaction in the wallet.  In addition, the
+	    transaction inputs are not signed, and therefore the returned raw transaction cannot be directly
+	    transmitted to the network with {!sendrawtransaction} without it being previosuly signed with
+	    {!signrawtransaction}.
+
+	    A transaction fee is specified implicitly by making the total output amounts be smaller than the
+	    total input amounts (ie, fee = total inputs - total outputs).
+
+	    Beware that no checks are performed concerning the validity of the transaction.  If care is not taken,
+	    it is possible to create a transaction that will not be accepted by the network, either because it
+	    uses invalid inputs, has a greater total amount in the outputs than in the outputs, or does not offer
+	    a sufficient transaction fee. *)
+
+	val decoderawtransaction: ?conn:conn_t -> hextx_t -> assoc_t monad_t
+	(** Returns an object containing information concerning the given raw transaction. *)
+
+	val dumpprivkey: ?conn:conn_t -> address_t -> priv_t monad_t
+	(** Returns the private key corresponding to the given address.  This private key can then be imported
+	    into another wallet with {!importprivkey}.  {b (Requires unlocked wallet)}. *)
+
+	val encryptwallet: ?conn:conn_t -> string -> unit monad_t
+	(** Encrypts the wallet with the given passphrase.  Note that once encrypted, a wallet cannot be unencrypted
+	    (though the passphrase may be changed with {!walletpassphrasechange}), and operations requiring an unlocked
+	    wallet must be preceded by a call to {!walletpassphrase}. *)
+
+	val getaccount: ?conn:conn_t -> address_t -> account_t monad_t
+	(** Returns the account associated with the given address. *)
+
+	val getaccountaddress: ?conn:conn_t -> account_t -> address_t monad_t
+	(** Returns the receiving address currently associated with the given account.
+	    Note that a new address will automatically be generated upon funds being received on this address. *)
+
+	val getaddressesbyaccount: ?conn:conn_t -> account_t -> address_t list monad_t
+	(** Return all addresses associated with the given account. *)
+
+	val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> unit -> amount_t monad_t
+	(** If [account] is provided, returns the balance available in that account.
+	    If not, returns the total balance of all accounts. *)
+
+	val getblock: ?conn:conn_t -> blkhash_t -> assoc_t monad_t
+	(** Returns the available data for the block with the given block hash. *)
+
+	val getblockcount: ?conn:conn_t -> unit -> int monad_t
+	(** Returns the number of blocks in the longest block chain. *)
+
+	val getblockhash: ?conn:conn_t -> int -> blkhash_t monad_t
+	(** Returns the block hash for the block located at the given index in the longest block chain. *)
+
+	val getblocktemplate: ?conn:conn_t -> ?obj:assoc_t -> unit -> assoc_t monad_t
+	(** Returns data needed to construct a block to work on. *)
+
+	val getconnectioncount: ?conn:conn_t -> unit -> int monad_t
+	(** Returns the number of connections to peer nodes. *)
+
+	val getdifficulty: ?conn:conn_t -> unit -> float monad_t
+	(** Returns the current difficulty (as a multiple of the minimum difficulty). *)
+
+	val getgenerate: ?conn:conn_t -> unit -> bool monad_t
+	(** Are we currently trying to generate new blocks? *)
+
+	val gethashespersec: ?conn:conn_t -> unit -> int monad_t
+	(** Returns number of hashes per second we currently attain when attempting block generation.
+	    Note that it returns 0 if block generation is switched off. *)
+
+	val getinfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns an object containing various state information. *)
+
+	val getmininginfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns an object containing mining related information. *)
+
+	val getnewaddress: ?conn:conn_t -> ?account:account_t -> unit -> address_t monad_t
+	(** Returns a newly generated address.  If [account] is specified, the returned address is
+	    associated with that account.  If not, the address is associated with the default account. *)
+
+	val getpeerinfo: ?conn:conn_t -> unit -> assoc_t list monad_t
+	(** Returns information about each connected peer. *)
+
+	val getrawmempool: ?conn:conn_t -> unit -> txid_t list monad_t
+	(** Returns all transaction IDs currently in the memory pool. *)
+
+	val getrawtransaction: ?conn:conn_t -> txid_t -> hextx_t monad_t
+	(** Returns the raw transaction corresponding to the given transaction ID. *)
+
+	val getrawtransaction_verbose: ?conn:conn_t -> txid_t -> assoc_t monad_t
+	(** Returns all the raw information concerning the transaction with the given ID.
+	    This function returns even more information than that available with {!gettransaction}. *)
+
+	val getreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> account_t -> amount_t monad_t
+	(** Returns the total amount received on the given account.  Note that only receiving transactions
+	    are considered and therefore this function does not compute the account's current balance;
+	    see {!getbalance} for that purpose. *)
+
+	val getreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> address_t -> amount_t monad_t
+	(** Returns the total amount received on this address.  Note that only receiving transactions are considered
+	    and therefore this function does not compute the balance currently associated with the address. *)
+
+	val gettransaction: ?conn:conn_t -> txid_t -> assoc_t monad_t
+	(** Returns an object containing various information about the given transaction. *)
+
+	val getwork_with_data: ?conn:conn_t -> hexwork_t -> bool monad_t
+	(** Tries to solve the given block, returning a boolean indicating success status. *)
+
+	val getwork_without_data: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns formatted hash data to work on. *)
+
+	val importprivkey: ?conn:conn_t -> ?account:account_t -> priv_t -> unit monad_t
+	(** Adds a private key to the wallet.  This can be an externally generated key or one previously
+	    obtained with {!dumpprivkey}.  If [account] is provided, the key is associated with that account.
+	    If not, the key is associated with the default account.  {b (Requires unlocked wallet)}. *)
+
+	val keypoolrefill: ?conn:conn_t -> unit -> unit monad_t
+	(** Refills the keypool.  {b (Requires unlocked wallet)}. *)
+
+	val listaccounts: ?conn:conn_t -> ?minconf:int -> unit -> (account_t * amount_t) list monad_t
+	(** Returns a list of all accounts and associated balance. *)
+
+	val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
+	(** Returns a list of the groups of addresses whose common ownership has been made
+	    public by common use as inputs or as the resulting change in past transactions. *)
+
+	val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (account_t * amount_t * int) list monad_t
+	(** Returns a list of the total amount received by each account.  Each returned list element is a tuple
+	    consisting of an account, the total amount received for that account, and the number of confirmations.
+	    Optional parameter [includeempty] indicates whether accounts with nothing received will be included
+	    in the returned list (defaults to [false]). *)
+
+	val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (address_t * account_t * amount_t * int) list monad_t
+	(** Returns a list of the total amount received by each address.  Each returned list element is a tuple consisting
+	    of the address, the associated account, the total amount received for that address, and the number of confirmations.
+	    Optional parameter [includeempty] indicates whether accounts with nothing received will be included in the returned
+	    list (defaults to [false]). *)
+
+	val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> unit -> (assoc_t list * blkhash_t) monad_t
+	(** Returns a pair consisting of a list of all transactions and the block hash of the latest block.
+	    If provided, the [blockhash] parameter limits the list of transactions to those occurring after
+	    (and not including) that block.  Note that if you want to provide a value for parameter [minconf],
+	    then you must also provide [blockhash]. *)
+
+	val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> unit -> assoc_t list monad_t
+	(** Returns up to [count] most recent transactions skipping the first [from] transactions for [account].
+	    If [account] is not provided, then all recent transactions from all accounts will be returned.
+	    Note that [count] and [from] default to 10 and 0, respectively. *)
+
+	val listunspent: ?conn:conn_t -> ?minconf:int -> ?maxconf:int -> ?addresses:address_t list -> unit -> assoc_t list monad_t
+	(** Returns a list of the unspent transaction outputs that have between [minconf] and [maxconf] confirmations
+	    (these default to 1 and 999_999, respectively).  If [addresses] is provided, the returned list is filtered
+	    to only include transaction outputs paid to the specified addresses. *)
+
+	val move: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> account_t -> amount_t -> bool monad_t
+	(** [move ?minconf ?comment from_account to_account amount] transfers the given amount from one account to another.
+	    If provided, [comment] allows you to record a comment associated with the move.  Note that this is operation
+	    only rearranges the internal balances on your wallet, and is not communicated to the Bitcoin network. *)
+
+	val sendfrom: ?conn:conn_t -> ?minconf:int -> ?comment:string -> ?recipient:string -> account_t -> address_t -> amount_t -> txid_t monad_t
+	(** Transfers a given amount to the specified address, deducting the balance of the given account.
+	    If successful, the function returns the ID of the transaction recording the transfer. The optional
+	    parameter [comment] allows you to record an arbitrary comment about this transaction, whereas the
+	    also optional [recipient] assigns a string identifier to the recipient address.  Note that [sendfrom]
+	    is only performed if the account balance is sufficient to fund the transfer.  {b (Requires unlocked wallet)}. *)
+
+	val sendmany: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> (address_t * amount_t) list -> txid_t monad_t
+	(** Makes multiple transfers from a given account.  Besides the source account, this function accepts as
+	    parameter a list whole elements are pairs consisting of each target address and the amount to be sent.
+	    If successful, the function returns the ID of the transaction recording the transfer.  The optional
+	    parameter [comment] allows you to record an arbitrary comment about this transaction.  Note that [sendmany]
+	    is only performed if the account balance is sufficient to fund the transfer.  {b (Requires unlocked wallet)}. *)
+
+	val sendrawtransaction: ?conn:conn_t -> hextx_t -> txid_t monad_t
+	(** Transmits the given raw transaction to the network.  Note that no attempt is made
+	    to verify the validity of the transaction.  Other peers may choose to drop it if invalid. *)
+
+	val sendtoaddress: ?conn:conn_t -> ?comment:string -> ?recipient:string -> address_t -> amount_t -> txid_t monad_t
+	(** Transfers a given amount to the specified address, deducting the balance of the defaul account.
+	    If successful, the function returns the ID of the transaction recording the transfer. The optional
+	    parameter [comment] allows you to record an arbitrary comment about this transaction, whereas
+	    the also optional [recipient] assigns a string identifier to the recipient address.  Note that
+	    [sendtoaddress] is only performed if the total balance (not the balance of the default account!)
+	    is sufficient to fund the transfer.  {b (Requires unlocked wallet)}. *)
+
+	val setaccount: ?conn:conn_t -> address_t -> account_t -> unit monad_t
+	(** Associates the given address with the given account. *)
+
+	val setgenerate: ?conn:conn_t -> ?genproclimit:int -> bool -> unit monad_t
+	(** Turns on/off the generation of new blocks (a.k.a. "mining").
+	    If provided, [genproclimit] limits the number of CPUs to be used for generating. *)
+
+	val settxfee: ?conn:conn_t -> amount_t -> bool monad_t
+	(** Sets the transaction fee to be used in subsequent transactions. *)
+
+	val signmessage: ?conn:conn_t -> address_t -> string -> sig_t monad_t
+	(** Signs the given message with the private key of the given address.  The resulting
+	    signed message can be validated with {!validateaddress}. {b (Requires unlocked wallet)}. *)
+
+	val signrawtransaction: ?conn:conn_t -> ?parents:(txid_t * int * hexspk_t) list -> ?keys:priv_t list -> ?sighash:(sigcomp_t * bool) -> hextx_t -> (hextx_t * bool) monad_t
+	(** Signs a raw transaction, returning a pair with the signed transaction in hex format and a boolean indicating
+	    whether all private keys required for a successful signing have been found.  A raw transaction created with
+	    {!createrawtransaction} must be signed before broadcasting to the network with {!sendrawtransaction}.  The
+	    optional parameters [parents], [keys], and [sighash] are only required if you wish to chain transactions
+	    or if the private keys required for signing do not reside in the wallet.  Note that these optional parameters
+	    have the particularity that providing a value for parameter {i n} requires also providing a value for {i n-1}. *)
+
+	val submitblock: ?conn:conn_t -> hexblk_t -> unit monad_t
+	(** Attempts to submit new block to network. *)
+
+	val validateaddress: ?conn:conn_t -> address_t -> assoc_t option monad_t
+	(** Is the given address a valid Bitcoin address?  If so, this function returns an object
+	    containing miscelaneous information about that address.  Returns [None] otherwise. *)
+
+	val verifymessage: ?conn:conn_t -> address_t -> sig_t -> string -> bool monad_t
+	(** Returns a boolean indicating whether a supposedly signed message does indeed correspond
+	    to a source message signed with the given address.  Use {!signmessage} for signing messages. *)
+
+	val walletlock: ?conn:conn_t -> unit -> unit monad_t
+	(** Removes the wallet decryption key from memory, thus effectively locking the wallet.  After this
+	    function is invoked, you may not perform any API calls that require an unlocked wallet unless
+	    you beforehand unlock the wallet again with {!walletpassphrase}.  Note that this function may
+	    not be called on an already locked wallet or in one which is altogether unencrypted. *)
+
+	val walletpassphrase: ?conn:conn_t -> string -> int -> unit monad_t
+	(** [walletpassphrase passphrase timeout] unlocks an encrypted wallet, storing the decryption key
+	    in memory.  If your wallet is encrypted (see {!encryptwallet}) then you must invoke this function
+	    prior to calling any of the functions which require an unlocked wallet.  Note that the unlocking
+	    expires after [timeout] seconds.  Regardless of the timeout, you may at any moment lock again the
+	    wallet with {!walletlock}. *)
+
+	val walletpassphrasechange: ?conn:conn_t -> string -> string -> unit monad_t
+	(** [walletpassphrasechange old_passphrase new_passphrase] changes the wallet passphrase from
+	    [old_passphrase] to [new_passphrase].  Must only be called for an encrypted wallet. *)
+end
+
+
+(********************************************************************************)
+(**	{1 Public functions and values}						*)
+(********************************************************************************)
+
+val amount_of_float: float -> amount_t
+(** Converts a BTC quantity expressed as a [float] into its {!amount_t} representation. *)
+
+val float_of_amount: amount_t -> float
+(** Converts a BTC quantity expressed as an {!amount_t} into its [float] representation. *)
+
+
+(********************************************************************************)
+(**	{1 Public functors}							*)
+(********************************************************************************)
+
+(**	Functor that takes a concrete implementation of a {!HTTPCLIENT} and actual
+	{!CONNECTION} information, and creates a module with signature {!ENGINE}
+	offering an API for communicating with a Bitcoin client.
+*)
+module Make:
+	functor (Httpclient: HTTPCLIENT) ->
+	functor (Connection: CONNECTION) ->
+	ENGINE with type 'a monad_t = 'a Httpclient.Monad.t
+

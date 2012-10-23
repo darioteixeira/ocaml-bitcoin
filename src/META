@@ -1,0 +1,36 @@
+# OASIS_START
+# DO NOT EDIT (digest: 05032572c145b3e410e33db9f2e14f9e)
+version = "1.0"
+description =
+"Library offering an OCaml interface to the official Bitcoin client API"
+requires = "netstring yojson"
+archive(byte) = "bitcoin.cma"
+archive(byte, plugin) = "bitcoin.cma"
+archive(native) = "bitcoin.cmxa"
+archive(native, plugin) = "bitcoin.cmxs"
+exists_if = "bitcoin.cma"
+package "ocsigen" (
+ version = "1.0"
+ description =
+ "Library offering an OCaml interface to the official Bitcoin client API"
+ requires = "threads lwt ocsigenserver bitcoin"
+ archive(byte) = "bitcoin_ocsigen.cma"
+ archive(byte, plugin) = "bitcoin_ocsigen.cma"
+ archive(native) = "bitcoin_ocsigen.cmxa"
+ archive(native, plugin) = "bitcoin_ocsigen.cmxs"
+ exists_if = "bitcoin_ocsigen.cma"
+)
+
+package "ocamlnet" (
+ version = "1.0"
+ description =
+ "Library offering an OCaml interface to the official Bitcoin client API"
+ requires = "netclient bitcoin"
+ archive(byte) = "bitcoin_ocamlnet.cma"
+ archive(byte, plugin) = "bitcoin_ocamlnet.cma"
+ archive(native) = "bitcoin_ocamlnet.cmxa"
+ archive(native, plugin) = "bitcoin_ocamlnet.cmxs"
+ exists_if = "bitcoin_ocamlnet.cma"
+)
+# OASIS_STOP
+

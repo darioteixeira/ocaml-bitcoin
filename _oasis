@@ -1,0 +1,49 @@
+OASISFormat:		0.3
+Name:			OCaml-bitcoin
+Version:		1.0
+Synopsis:		Library offering an OCaml interface to the official Bitcoin client API
+Authors:		Dario Teixeira
+License:		GPL-2.0
+BuildTools:		ocamlbuild, ocamldoc
+Plugins:		META (0.3), DevFiles (0.3)
+
+Library "bitcoin"
+  Path:			src
+  Modules:		Bitcoin
+  BuildDepends:		netstring, yojson
+
+Library "bitcoin_ocsigen"
+  Path:			src
+  Modules:		Bitcoin_ocsigen
+  BuildDepends:		threads, lwt, ocsigenserver, bitcoin
+  FindlibParent:	bitcoin
+  FindlibName:		ocsigen
+
+Document "bitcoin-api"
+  Title:		API reference for OCaml-bitcoin
+  Type:			ocamlbuild (0.3)
+  Install:		true
+  InstallDir:		$docdir
+  BuildTools:		ocamldoc
+  XOCamlbuildPath:	./
+  XOCamlbuildLibraries:	bitcoin, bitcoin.ocsigen, bitcoin.ocamlnet
+
+Library "bitcoin_ocamlnet"
+  Path:			src
+  Modules:		Bitcoin_ocamlnet
+  BuildDepends:		netclient, bitcoin
+  FindlibParent:	bitcoin
+  FindlibName:		ocamlnet
+
+Executable test
+  Path:			test
+  MainIs:		test.ml
+  Install:		false
+  Build$:		flag (tests)
+  BuildDepends:		oUnit (>= 1.1.0), bitcoin.ocamlnet
+  CompiledObject:	best
+  
+Test main
+  Run$:			flag (tests)
+  Command:		$test
+
