@@ -18,7 +18,7 @@ struct
 		{
 		inet_addr = Unix.inet_addr_loopback;
 		host = "localhost";
-		port = 8332;
+		port = 18332;
 		username = "user";
 		password = "password";
 		}
