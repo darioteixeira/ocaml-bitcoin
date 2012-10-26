@@ -1,6 +1,6 @@
 OASISFormat:		0.3
 Name:			OCaml-bitcoin
-Version:		1.0
+Version:		1.0+dev
 Synopsis:		Library offering an OCaml interface to the official Bitcoin client API
 Authors:		Dario Teixeira
 License:		GPL-2.0
