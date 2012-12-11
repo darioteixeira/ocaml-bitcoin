@@ -19,6 +19,13 @@ Library "bitcoin_ocsigen"
   FindlibParent:	bitcoin
   FindlibName:		ocsigen
 
+Library "bitcoin_ocamlnet"
+  Path:			src
+  Modules:		Bitcoin_ocamlnet
+  BuildDepends:		netclient, bitcoin
+  FindlibParent:	bitcoin
+  FindlibName:		ocamlnet
+
 Document "bitcoin-api"
   Title:		API reference for OCaml-bitcoin
   Type:			ocamlbuild (0.3)
@@ -27,13 +34,6 @@ Document "bitcoin-api"
   BuildTools:		ocamldoc
   XOCamlbuildPath:	./
   XOCamlbuildLibraries:	bitcoin, bitcoin.ocsigen, bitcoin.ocamlnet
-
-Library "bitcoin_ocamlnet"
-  Path:			src
-  Modules:		Bitcoin_ocamlnet
-  BuildDepends:		netclient, bitcoin
-  FindlibParent:	bitcoin
-  FindlibName:		ocamlnet
 
 Executable test
   Path:			test
