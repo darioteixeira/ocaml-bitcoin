@@ -103,6 +103,8 @@ sig
 	(** Safely backs up wallet file to the given destination, which can be either a directory or a path with filename. *)
 
 	val createmultisig: ?conn:conn_t -> int -> pub_t list -> (address_t * hexspk_t) monad_t
+	(** Creates a m-of-n multi-signature address.  An invocation of [createmultisig num pubs] where [List.length pubs >= num]
+	    returns an address that requires the private keys of at least [num] members of [pubs] for spending. *)
 
 	val createrawtransaction: ?conn:conn_t -> txoutput_t list -> (address_t * amount_t) list -> hextx_t monad_t
 	(** [createrawtransaction inputs outputs] creates a raw transaction that transfers the given inputs
