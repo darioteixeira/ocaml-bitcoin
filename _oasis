@@ -1,6 +1,6 @@
 OASISFormat:		0.3
 Name:			OCaml-bitcoin
-Version:		1.0+dev
+Version:		1.1
 Synopsis:		Library offering an OCaml interface to the official Bitcoin client API
 Authors:		Dario Teixeira
 License:		GPL-2.0
@@ -9,11 +9,11 @@ Plugins:		META (0.3), DevFiles (0.3)
 
 Flag "ocsigen"
   Description:		Build auxiliary library "bitcoin_ocsigen" (implements an HTTP client using Ocsigenserver's Ocsigen_http_client)
-  Default:		false
+  Default:		true
 
 Flag "ocamlnet"
   Description:		Build auxiliary library "bitcoin_ocamlnet" (implements an HTTP client using Ocamlnet's Netclient)
-  Default:		false
+  Default:		true
 
 Library "bitcoin"
   Path:			src
