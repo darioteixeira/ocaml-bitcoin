@@ -23,14 +23,19 @@ type address_t = string
 type account_t = [ `Default | `Named of string ]
 type amount_t = int64
 type txid_t = string
+type txoutput_t = txid_t * int
 type blkhash_t = string
 type priv_t = string
+type pub_t = string
 type sig_t = string
 type sigcomp_t = [ `All | `None | `Single ]
 type hextx_t = string
 type hexspk_t = string
 type hexblk_t = string
 type hexwork_t = string
+type node_t = string
+type addnodeop_t = [ `Add | `Remove | `Onetry ]
+type lockop_t = [ `Lock | `Unlock ]
 type assoc_t = (string * Yojson.Safe.json) list
 
 type conn_t =
@@ -80,13 +85,17 @@ module type ENGINE =
 sig
 	type 'a monad_t
 
+	val addnode: ?conn:conn_t -> node_t -> addnodeop_t -> unit monad_t
 	val backupwallet: ?conn:conn_t -> string -> unit monad_t
-	val createrawtransaction: ?conn:conn_t -> (txid_t * int) list -> (address_t * amount_t) list -> hextx_t monad_t
+	val createmultisig: ?conn:conn_t -> int -> pub_t list -> (address_t * hexspk_t) monad_t
+	val createrawtransaction: ?conn:conn_t -> txoutput_t list -> (address_t * amount_t) list -> hextx_t monad_t
 	val decoderawtransaction: ?conn:conn_t -> hextx_t -> assoc_t monad_t
 	val dumpprivkey: ?conn:conn_t -> address_t -> priv_t monad_t
 	val encryptwallet: ?conn:conn_t -> string -> unit monad_t
 	val getaccount: ?conn:conn_t -> address_t -> account_t monad_t
 	val getaccountaddress: ?conn:conn_t -> account_t -> address_t monad_t
+        val getaddednodeinfo: ?conn:conn_t -> ?node:node_t -> unit -> assoc_t monad_t
+        val getaddednodeinfo_verbose: ?conn:conn_t -> ?node:node_t -> unit -> assoc_t list monad_t
 	val getaddressesbyaccount: ?conn:conn_t -> account_t -> address_t list monad_t
 	val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> unit -> amount_t monad_t
 	val getblock: ?conn:conn_t -> blkhash_t -> assoc_t monad_t
@@ -107,17 +116,21 @@ sig
 	val getreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> account_t -> amount_t monad_t
 	val getreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> address_t -> amount_t monad_t
 	val gettransaction: ?conn:conn_t -> txid_t -> assoc_t monad_t
+	val gettxout: ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t monad_t
+	val gettxoutsetinfo: ?conn:conn_t -> unit -> assoc_t monad_t
 	val getwork_with_data: ?conn:conn_t -> hexwork_t -> bool monad_t
 	val getwork_without_data: ?conn:conn_t -> unit -> assoc_t monad_t
-	val importprivkey: ?conn:conn_t -> ?account:account_t -> priv_t -> unit monad_t
+	val importprivkey: ?conn:conn_t -> ?account:account_t -> ?rescan:bool-> priv_t -> unit monad_t
 	val keypoolrefill: ?conn:conn_t -> unit -> unit monad_t
 	val listaccounts: ?conn:conn_t -> ?minconf:int -> unit -> (account_t * amount_t) list monad_t
 	val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
+	val listlockunspent: ?conn:conn_t -> unit -> txoutput_t list monad_t
 	val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (account_t * amount_t * int) list monad_t
 	val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (address_t * account_t * amount_t * int) list monad_t
 	val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> unit -> (assoc_t list * blkhash_t) monad_t
 	val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> unit -> assoc_t list monad_t
 	val listunspent: ?conn:conn_t -> ?minconf:int -> ?maxconf:int -> ?addresses:address_t list -> unit -> assoc_t list monad_t
+	val lockunspent: ?conn:conn_t -> ?outputs:txoutput_t list -> lockop_t -> bool monad_t
 	val move: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> account_t -> amount_t -> bool monad_t
 	val sendfrom: ?conn:conn_t -> ?minconf:int -> ?comment:string -> ?recipient:string -> account_t -> address_t -> amount_t -> txid_t monad_t
 	val sendmany: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> (address_t * amount_t) list -> txid_t monad_t
@@ -127,7 +140,7 @@ sig
 	val setgenerate: ?conn:conn_t -> ?genproclimit:int -> bool -> unit monad_t
 	val settxfee: ?conn:conn_t -> amount_t -> bool monad_t
 	val signmessage: ?conn:conn_t -> address_t -> string -> sig_t monad_t
-	val signrawtransaction: ?conn:conn_t -> ?parents:(txid_t * int * hexspk_t) list -> ?keys:priv_t list -> ?sighash:(sigcomp_t * bool) -> hextx_t -> (hextx_t * bool) monad_t
+	val signrawtransaction: ?conn:conn_t -> ?parents:(txoutput_t * hexspk_t) list -> ?keys:priv_t list -> ?sighash:(sigcomp_t * bool) -> hextx_t -> (hextx_t * bool) monad_t
 	val submitblock: ?conn:conn_t -> hexblk_t -> unit monad_t
 	val validateaddress: ?conn:conn_t -> address_t -> assoc_t option monad_t
 	val verifymessage: ?conn:conn_t -> address_t -> sig_t -> string -> bool monad_t
@@ -257,6 +270,16 @@ struct
 
 
 	(************************************************************************)
+	(**	{3 Conversion between {!addnodeop_t} and [string]		*)
+	(************************************************************************)
+
+	let string_of_addnodeop = function
+		| `Add	  -> "add"
+		| `Remove -> "remove"
+		| `Onetry -> "onetry"
+
+
+	(************************************************************************)
 	(**	{3 Conversion from JSON values to OCaml values}			*)
 	(************************************************************************)
 
@@ -312,6 +335,8 @@ struct
 
 	let of_string x = `String x
 
+	let of_list conv xs = `List (List.map conv xs)
+
 	let of_assoc x = `Assoc x
 
 	let of_account x = string_of_account x |> of_string
@@ -344,18 +369,27 @@ struct
 	(**	{2 Public functions and values}					*)
 	(************************************************************************)
 
+	let addnode ?conn node op =
+		invoke ?conn ~params:[of_string node; string_of_addnodeop op |> of_string] "addnode" >|= to_unit
+
 	let backupwallet ?conn dest =
 		invoke ?conn ~params:[of_string dest] "backupwallet" >|= to_unit
 
+	let createmultisig ?conn num pubs =
+		let to_result = function
+			| `Assoc [("address", v1); ("redeemScript", v2)] -> (to_string v1, to_string v2)
+			| _						 -> assert false in
+		invoke ?conn ~params:[of_int num; of_list of_string pubs] "createmultisig" >|= to_result
+
 	let createrawtransaction ?conn inputs outputs =
 		let of_input (txid, vout) =
-			`Assoc [("txid", of_string txid); ("vout", of_int vout)] in
+			of_assoc [("txid", of_string txid); ("vout", of_int vout)] in
 		let of_output (address, amount) =
 			(address, of_amount amount) in
 		let params =
 			[
-			`List (List.map of_input inputs);
-			`Assoc (List.map of_output outputs);
+			of_list of_input inputs;
+			of_assoc (List.map of_output outputs);
 			] in
 		invoke ?conn ~params "createrawtransaction" >|= to_string
 
@@ -373,6 +407,12 @@ struct
 
 	let getaccountaddress ?conn account =
 		invoke ?conn ~params:[of_account account] "getaccountaddress" >|= to_string
+
+	let getaddednodeinfo ?conn ?node () =
+		invoke ?conn ~params:(of_bool false :: params_of_1tuple of_string node) "getaddednodeinfo" >|= to_assoc
+
+	let getaddednodeinfo_verbose ?conn ?node () =
+		invoke ?conn ~params:(of_bool true :: params_of_1tuple of_string node) "getaddednodeinfo" >|= to_list to_assoc
 
 	let getaddressesbyaccount ?conn account =
 		invoke ?conn ~params:[of_account account] "getaddressesbyaccount" >|= to_list to_string
@@ -434,14 +474,20 @@ struct
 	let gettransaction ?conn txid =
 		invoke ?conn ~params:[of_string txid] "gettransaction" >|= to_assoc
 
+	let gettxout ?conn ?(includemempool = true) (txid, num) =
+		invoke ?conn ~params:[of_string txid; of_int num; of_bool includemempool] "gettxout" >|= to_assoc
+
+	let gettxoutsetinfo ?conn () =
+		invoke ?conn "gettxoutsetinfo" >|= to_assoc
+
 	let getwork_with_data ?conn hexwork =
 		invoke ?conn ~params:[of_string hexwork] "getwork" >|= to_bool
 
 	let getwork_without_data ?conn () =
 		invoke ?conn "getwork" >|= to_assoc
 
-	let importprivkey ?conn ?(account = `Default) priv =
-		invoke ?conn ~params:[of_string priv; of_account account] "importprivkey" >|= to_unit
+	let importprivkey ?conn ?(account = `Default) ?(rescan = true) priv =
+		invoke ?conn ~params:[of_string priv; of_account account; of_bool rescan] "importprivkey" >|= to_unit
 
 	let keypoolrefill ?conn () =
 		invoke ?conn "keypoolrefill" >|= to_unit
@@ -458,6 +504,12 @@ struct
 			| `List [a; b; c] -> (to_string a, to_amount b, to_account c)
 			| _		  -> assert false in
 		invoke ?conn "listaddressgroupings" >|= to_list (to_list to_result)
+
+	let listlockunspent ?conn () =
+		let to_locked = function
+			| `Assoc [("txid", v1); ("vout", v2)] -> (to_string v1, to_int v2)
+			| _				      -> assert false in
+		invoke ?conn "listlockunspent" >|= to_list to_locked
 
 	let listreceivedbyaccount ?conn ?(minconf = 1) ?(includeempty = false) () =
 		let to_result = function
@@ -481,7 +533,16 @@ struct
 		invoke ?conn ~params:[of_account_with_wildcard account; of_int count; of_int from] "listtransactions" >|= to_list to_assoc
 
 	let listunspent ?conn ?(minconf = 1) ?(maxconf = 999999) ?(addresses = []) () =
-		invoke ?conn ~params:[of_int minconf; of_int maxconf; `List (List.map of_string addresses)] "listunspent" >|= to_list to_assoc
+		invoke ?conn ~params:[of_int minconf; of_int maxconf; of_list of_string addresses] "listunspent" >|= to_list to_assoc
+
+	let lockunspent ?conn ?outputs op =
+		let bool_of_lockop = function
+			| `Lock	  -> false
+			| `Unlock -> true in
+		let of_output (txid, vout) =
+			of_assoc [("txid", of_string txid); ("vout", of_int vout)] in
+		let params = (bool_of_lockop op |> of_bool) :: params_of_1tuple (of_list of_output) outputs in
+		invoke ?conn ~params "lockunspent" >|= to_bool
 
 	let move ?conn ?(minconf = 1) ?(comment = "") from_account to_account amount =
 		let params = [of_account from_account; of_account to_account; of_amount amount; of_int minconf; of_string comment] in
@@ -495,7 +556,7 @@ struct
 		let params =
 			[
 			of_account from_account;
-			`Assoc (List.map (fun (address, amount) -> (address, of_amount amount)) targets);
+			of_assoc (List.map (fun (address, amount) -> (address, of_amount amount)) targets);
 			of_int minconf;
 			of_string comment;
 			] in
@@ -521,18 +582,18 @@ struct
 		invoke ?conn ~params:[of_string address; of_string msg] "signmessage" >|= to_string
 
 	let signrawtransaction ?conn ?parents ?keys ?sighash hextx =
-		let of_parent (txid, vout, scriptpubkey) =
-			`Assoc [("txid", of_string txid); ("vout", of_int vout); ("scriptPubKey", of_string scriptpubkey)] in
-		let of_parents parents =
-			`List (List.map of_parent parents) in
-		let of_keys keys =
-			`List (List.map of_string keys) in
+		let of_parent ((txid, vout), scriptpubkey) =
+			of_assoc [("txid", of_string txid); ("vout", of_int vout); ("scriptPubKey", of_string scriptpubkey)] in
+		let of_parents =
+			of_list of_parent in
+		let of_keys =
+			of_list of_string in
 		let of_sighash (sigcomp, anyone_can_pay) =
 			(string_of_sigcomp sigcomp) ^ (if anyone_can_pay then "|ANYONECANPAY" else "") |> of_string in
 		let to_result = function
 			| `Assoc [("hex", `String hextx); ("complete", `Bool complete)] -> (hextx, complete)
 			| _								-> assert false in
-		let params = (of_string hextx) :: params_of_3tuple "signrawtransaction" of_parents of_keys of_sighash (parents, keys, sighash) in
+		let params = of_string hextx :: params_of_3tuple "signrawtransaction" of_parents of_keys of_sighash (parents, keys, sighash) in
 		invoke ?conn ~params "signrawtransaction" >|= to_result
 
 	let submitblock ?conn hexblk =

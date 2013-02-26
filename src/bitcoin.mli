@@ -25,14 +25,19 @@ type address_t = string					(** Bitcoin address (hash of the public portion of p
 type account_t = [ `Default | `Named of string ]	(** Besides the default account, one may also create named accounts *)
 type amount_t = int64					(** Amount in BTC, represented as a multiple of Bitcoin's base unit (= 10 nanoBTC).*)
 type txid_t = string					(** Transaction identifier *)
+type txoutput_t = txid_t * int				(** Transaction output *)
 type blkhash_t = string					(** Block hash *)
 type priv_t = string					(** Private portion of public/private ECDSA keypair *)
+type pub_t = string					(** Public portion of a public/private ECDSA keypair *)
 type sig_t = string					(** Message signature *)
 type sigcomp_t = [ `All | `None | `Single ]		(** How to compute signature hash *)
 type hextx_t = string					(** Hex representation of raw transaction *)
 type hexspk_t = string					(** Hex representation of script public key *)
 type hexblk_t = string					(** Hex representation of block data *)
 type hexwork_t = string					(** Hex representation of mining work data *)
+type node_t = string					(** Node representation *)
+type addnodeop_t = [ `Add | `Remove | `Onetry ]		(** Sub-commands associated with {!addnode} *)
+type lockop_t = [ `Lock | `Unlock ]			(** Available operations for {!lockunspent} *)
 type assoc_t = (string * Yojson.Safe.json) list		(** Association list *)
 
 type conn_t =
@@ -91,17 +96,21 @@ module type ENGINE =
 sig
 	type 'a monad_t
 
+	val addnode: ?conn:conn_t -> node_t -> addnodeop_t -> unit monad_t
+	(** Allows manually adding/removing a node. *)
+
 	val backupwallet: ?conn:conn_t -> string -> unit monad_t
 	(** Safely backs up wallet file to the given destination, which can be either a directory or a path with filename. *)
 
-	val createrawtransaction: ?conn:conn_t -> (txid_t * int) list -> (address_t * amount_t) list -> hextx_t monad_t
+	val createmultisig: ?conn:conn_t -> int -> pub_t list -> (address_t * hexspk_t) monad_t
+
+	val createrawtransaction: ?conn:conn_t -> txoutput_t list -> (address_t * amount_t) list -> hextx_t monad_t
 	(** [createrawtransaction inputs outputs] creates a raw transaction that transfers the given inputs
-	    (a list of transaction IDs and output indices) to the given outputs (a list of addresses and
-	    amounts).  This function returns the hex-encoded transaction, but neither does it transmit the
-	    transaction to the network nor does it store the transaction in the wallet.  In addition, the
-	    transaction inputs are not signed, and therefore the returned raw transaction cannot be directly
-	    transmitted to the network with {!sendrawtransaction} without it being previosuly signed with
-	    {!signrawtransaction}.
+	    (a list of transaction outputs) to the given outputs (a list of addresses and amounts).  This
+	    function returns the hex-encoded transaction, but neither does it transmit the transaction to
+	    the network nor does it store the transaction in the wallet.  In addition, the transaction inputs
+	    are not signed, and therefore the returned raw transaction cannot be directly transmitted to the
+	    network with {!sendrawtransaction} without it being previosuly signed with {!signrawtransaction}.
 
 	    A transaction fee is specified implicitly by making the total output amounts be smaller than the
 	    total input amounts (ie, fee = total inputs - total outputs).
@@ -129,6 +138,12 @@ sig
 	val getaccountaddress: ?conn:conn_t -> account_t -> address_t monad_t
 	(** Returns the receiving address currently associated with the given account.
 	    Note that a new address will automatically be generated upon funds being received on this address. *)
+
+	val getaddednodeinfo: ?conn:conn_t -> ?node:node_t -> unit -> assoc_t monad_t
+	(** Returns the list of nodes manually added with {!addnode}. *)
+
+	val getaddednodeinfo_verbose: ?conn:conn_t -> ?node:node_t -> unit -> assoc_t list monad_t
+	(** Returns the list of nodes manually added with {!addnode}. *)
 
 	val getaddressesbyaccount: ?conn:conn_t -> account_t -> address_t list monad_t
 	(** Return all addresses associated with the given account. *)
@@ -197,16 +212,24 @@ sig
 	val gettransaction: ?conn:conn_t -> txid_t -> assoc_t monad_t
 	(** Returns an object containing various information about the given transaction. *)
 
+	val gettxout: ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t monad_t
+	(** Returns detailed information concerning a given unspent transaction output. *)
+
+	val gettxoutsetinfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns some statistics about the current set of unspent transaction outputs. *)
+
 	val getwork_with_data: ?conn:conn_t -> hexwork_t -> bool monad_t
 	(** Tries to solve the given block, returning a boolean indicating success status. *)
 
 	val getwork_without_data: ?conn:conn_t -> unit -> assoc_t monad_t
 	(** Returns formatted hash data to work on. *)
 
-	val importprivkey: ?conn:conn_t -> ?account:account_t -> priv_t -> unit monad_t
+	val importprivkey: ?conn:conn_t -> ?account:account_t -> ?rescan:bool-> priv_t -> unit monad_t
 	(** Adds a private key to the wallet.  This can be an externally generated key or one previously
 	    obtained with {!dumpprivkey}.  If [account] is provided, the key is associated with that account.
-	    If not, the key is associated with the default account.  {b (Requires unlocked wallet)}. *)
+	    If not, the key is associated with the default account.  The [rescan] parameter indicates
+	    whether the blockchain should be rescanned for transactions involving the imported key.
+	    It is [true] be default.  {b (Requires unlocked wallet)}. *)
 
 	val keypoolrefill: ?conn:conn_t -> unit -> unit monad_t
 	(** Refills the keypool.  {b (Requires unlocked wallet)}. *)
@@ -217,6 +240,10 @@ sig
 	val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
 	(** Returns a list of the groups of addresses whose common ownership has been made
 	    public by common use as inputs or as the resulting change in past transactions. *)
+
+	val listlockunspent: ?conn:conn_t -> unit -> txoutput_t list monad_t
+	(** Returns a list of temporarily unspendable transaction outputs.  These are outputs previously locked by a call
+	    of {!lockunspent}, and will not be spent by the system unless explicitly used in a raw transaction. *)
 
 	val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (account_t * amount_t * int) list monad_t
 	(** Returns a list of the total amount received by each account.  Each returned list element is a tuple
@@ -245,6 +272,13 @@ sig
 	(** Returns a list of the unspent transaction outputs that have between [minconf] and [maxconf] confirmations
 	    (these default to 1 and 999_999, respectively).  If [addresses] is provided, the returned list is filtered
 	    to only include transaction outputs paid to the specified addresses. *)
+
+	val lockunspent: ?conn:conn_t -> ?outputs:txoutput_t list -> lockop_t -> bool monad_t
+	(** Updates the list of temporarily unspendable transaction outputs.  If the operation is [`Lock], this function
+	    will lock the specified outputs, preventing them from being spent outside of a raw transaction.  If the operation
+	    is [`Unlock], this function will unlock the specified previously locked outputs.  To unlock all currently locked
+	    outputs, set the operation to [`Unlock] and do not provide any list of outputs.  Returns a boolean indicating
+	    whether the operation was successfull. *)
 
 	val move: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> account_t -> amount_t -> bool monad_t
 	(** [move ?minconf ?comment from_account to_account amount] transfers the given amount from one account to another.
@@ -291,7 +325,7 @@ sig
 	(** Signs the given message with the private key of the given address.  The resulting
 	    signed message can be validated with {!validateaddress}. {b (Requires unlocked wallet)}. *)
 
-	val signrawtransaction: ?conn:conn_t -> ?parents:(txid_t * int * hexspk_t) list -> ?keys:priv_t list -> ?sighash:(sigcomp_t * bool) -> hextx_t -> (hextx_t * bool) monad_t
+	val signrawtransaction: ?conn:conn_t -> ?parents:(txoutput_t * hexspk_t) list -> ?keys:priv_t list -> ?sighash:(sigcomp_t * bool) -> hextx_t -> (hextx_t * bool) monad_t
 	(** Signs a raw transaction, returning a pair with the signed transaction in hex format and a boolean indicating
 	    whether all private keys required for a successful signing have been found.  A raw transaction created with
 	    {!createrawtransaction} must be signed before broadcasting to the network with {!sendrawtransaction}.  The

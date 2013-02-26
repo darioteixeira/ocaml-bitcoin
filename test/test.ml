@@ -86,6 +86,17 @@ let (!!) test = match !global with
 	| Some global -> fun () -> test global
 	| None	      -> fun () -> assert_failure "not initialised"
 
+let test_addnode global =
+	let nodes_len () = List.length (Testnet.getaddednodeinfo ()) in
+	let node = Printf.sprintf "node-%016Lx" (Random.int64 Int64.max_int) in
+	let len1 = nodes_len () in
+	let () = Testnet.addnode node `Add in
+	let len2 = nodes_len () in
+	assert_equal len2 (len1 + 1);
+	let () = Testnet.addnode node `Remove in
+	let len3 = nodes_len () in
+	assert_equal len2 (len3 + 1)
+
 let test_backupwallet global =
 	bracket_tmpfile (fun (fname, _) -> Testnet.backupwallet fname) ()
 
@@ -222,6 +233,7 @@ let test_validateaddress global =
 
 let suite = "OCaml-bitcoin" >:::
 	[
+	"addnode"		>:: !!test_addnode;
 	"backupwallet"		>:: !!test_backupwallet;
 	"dumpprivkey"		>:: !!test_dumpprivkey;
 	"getaccount"		>:: !!test_getaccount;
