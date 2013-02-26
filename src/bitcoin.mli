@@ -36,8 +36,8 @@ type hexspk_t = string					(** Hex representation of script public key *)
 type hexblk_t = string					(** Hex representation of block data *)
 type hexwork_t = string					(** Hex representation of mining work data *)
 type node_t = string					(** Node representation *)
-type addnodeop_t = [ `Add | `Remove | `Onetry ]		(** Sub-commands associated with {!addnode} *)
-type lockop_t = [ `Lock | `Unlock ]			(** Available operations for {!lockunspent} *)
+type addnodeop_t = [ `Add | `Remove | `Onetry ]		(** Sub-commands associated with [addnode] *)
+type lockop_t = [ `Lock | `Unlock ]			(** Available operations for [lockunspent] *)
 type assoc_t = (string * Yojson.Safe.json) list		(** Association list *)
 
 type conn_t =
