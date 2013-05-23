@@ -48,8 +48,10 @@ struct
 				let rec string_of_stream stream = match_lwt Ocsigen_stream.next stream with
 					| Ocsigen_stream.Cont (str, stream)	-> Buffer.add_string buf str; string_of_stream stream
 					| Ocsigen_stream.Finished (Some stream)	-> string_of_stream stream
-					| Ocsigen_stream.Finished None		-> Lwt.return (Buffer.contents buf)
-				in string_of_stream (Ocsigen_stream.get stream)
+					| Ocsigen_stream.Finished None		-> Lwt.return (Buffer.contents buf) in
+				lwt result = string_of_stream (Ocsigen_stream.get stream) in
+				Ocsigen_stream.finalize stream `Success >>
+				Lwt.return result
 			| None ->
 				Lwt.fail No_response
 end
