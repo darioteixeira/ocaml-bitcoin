@@ -43,9 +43,9 @@ Document "bitcoin-full-api"
   Title:		API reference for OCaml-bitcoin
   Type:			ocamlbuild (0.3)
   Install:		true
-  InstallDir:		$docdir
+  InstallDir:		$htmldir
   BuildTools:		ocamldoc
-  XOCamlbuildPath:	./
+  XOCamlbuildPath:	src
   XOCamlbuildLibraries:	bitcoin, bitcoin.ocsigen, bitcoin.ocamlnet
 
 Document "bitcoin-ocamlnet-api"
@@ -53,9 +53,9 @@ Document "bitcoin-ocamlnet-api"
   Title:		API reference for OCaml-bitcoin
   Type:			ocamlbuild (0.3)
   Install:		true
-  InstallDir:		$docdir
+  InstallDir:		$htmldir
   BuildTools:		ocamldoc
-  XOCamlbuildPath:	./
+  XOCamlbuildPath:	src
   XOCamlbuildLibraries:	bitcoin, bitcoin.ocamlnet
 
 Document "bitcoin-ocsigen-api"
@@ -63,9 +63,9 @@ Document "bitcoin-ocsigen-api"
   Title:		API reference for OCaml-bitcoin
   Type:			ocamlbuild (0.3)
   Install:		true
-  InstallDir:		$docdir
+  InstallDir:		$htmldir
   BuildTools:		ocamldoc
-  XOCamlbuildPath:	./
+  XOCamlbuildPath:	src
   XOCamlbuildLibraries:	bitcoin, bitcoin.ocsigen
 
 Document "bitcoin-api"
@@ -73,9 +73,9 @@ Document "bitcoin-api"
   Title:		API reference for OCaml-bitcoin
   Type:			ocamlbuild (0.3)
   Install:		true
-  InstallDir:		$docdir
+  InstallDir:		$htmldir
   BuildTools:		ocamldoc
-  XOCamlbuildPath:	./
+  XOCamlbuildPath:	src
   XOCamlbuildLibraries:	bitcoin
 
 Executable test
