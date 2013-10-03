@@ -209,7 +209,7 @@ struct
 		let headers =
 			[
 			("content-type", "application/json");
-			("authorization", "Basic " ^ (Netencoding.Base64.encode (conn.username ^ ":" ^ conn.password)));
+			("authorization", "Basic " ^ (Cryptokit.transform_string (Cryptokit.Base64.encode_compact_pad ()) (conn.username ^ ":" ^ conn.password)));
 			] in
 		let request = `Assoc
 			[
