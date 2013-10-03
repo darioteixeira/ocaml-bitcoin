@@ -20,7 +20,7 @@ Flag "cohttp"
   Default:              false
 
 Flag "ocurl"
-  Description:          Build auxiliary library "bitcoin_cohttp" (implements an HTTP client using OCurl's Cohttp_lwt_unix.Client)
+  Description:          Build auxiliary library "bitcoin_ocurl" (implements an HTTP client using OCurl)
   Default:              false
 
 Library "bitcoin"
