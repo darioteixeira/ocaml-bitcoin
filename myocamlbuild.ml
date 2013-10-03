@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: bba6c87008169db21ccba8756866de44) *)
+(* DO NOT EDIT (digest: 45895a5935f1bea486a4ebb0dbeb10d9) *)
 module OASISGettext = struct
 (* # 21 "src/oasis/OASISGettext.ml" *)
 
@@ -481,7 +481,9 @@ let package_default =
        [
           ("bitcoin", ["src"]);
           ("bitcoin_ocsigen", ["src"]);
-          ("bitcoin_ocamlnet", ["src"])
+          ("bitcoin_ocamlnet", ["src"]);
+          ("bitcoin_cohttp", ["src"]);
+          ("bitcoin_ocurl", ["src"])
        ];
      lib_c = [];
      flags = [];
@@ -491,6 +493,6 @@ let package_default =
 
 let dispatch_default = MyOCamlbuildBase.dispatch_default package_default;;
 
-# 495 "myocamlbuild.ml"
+# 497 "myocamlbuild.ml"
 (* OASIS_STOP *)
 Ocamlbuild_plugin.dispatch dispatch_default;;
