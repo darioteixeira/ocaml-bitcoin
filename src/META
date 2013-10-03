@@ -1,14 +1,26 @@
 # OASIS_START
-# DO NOT EDIT (digest: 20693f8c10250725a1f042bbd2da25ca)
+# DO NOT EDIT (digest: b519ef97646cdfb2e71620c86b00276d)
 version = "1.1.1"
 description =
 "Library offering an OCaml interface to the official Bitcoin client API"
-requires = "netstring yojson"
+requires = "cryptokit yojson"
 archive(byte) = "bitcoin.cma"
 archive(byte, plugin) = "bitcoin.cma"
 archive(native) = "bitcoin.cmxa"
 archive(native, plugin) = "bitcoin.cmxs"
 exists_if = "bitcoin.cma"
+package "ocurl" (
+ version = "1.1.1"
+ description =
+ "Library offering an OCaml interface to the official Bitcoin client API"
+ requires = "curl bitcoin"
+ archive(byte) = "bitcoin_ocurl.cma"
+ archive(byte, plugin) = "bitcoin_ocurl.cma"
+ archive(native) = "bitcoin_ocurl.cmxa"
+ archive(native, plugin) = "bitcoin_ocurl.cmxs"
+ exists_if = "bitcoin_ocurl.cma"
+)
+
 package "ocsigen" (
  version = "1.1.1"
  description =
@@ -31,6 +43,18 @@ package "ocamlnet" (
  archive(native) = "bitcoin_ocamlnet.cmxa"
  archive(native, plugin) = "bitcoin_ocamlnet.cmxs"
  exists_if = "bitcoin_ocamlnet.cma"
+)
+
+package "cohttp" (
+ version = "1.1.1"
+ description =
+ "Library offering an OCaml interface to the official Bitcoin client API"
+ requires = "cohttp.lwt bitcoin"
+ archive(byte) = "bitcoin_cohttp.cma"
+ archive(byte, plugin) = "bitcoin_cohttp.cma"
+ archive(native) = "bitcoin_cohttp.cmxa"
+ archive(native, plugin) = "bitcoin_cohttp.cmxs"
+ exists_if = "bitcoin_cohttp.cma"
 )
 # OASIS_STOP
 
