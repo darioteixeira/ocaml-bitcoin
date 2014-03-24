@@ -1,7 +1,7 @@
 # OASIS_START
-# DO NOT EDIT (digest: 26732537474bfdf108d9476701bc10c4)
-# Ignore VCS directories, you can use the same kind of rule outside 
-# OASIS_START/STOP if you want to exclude directories that contains 
+# DO NOT EDIT (digest: 6751e2099871f738a67613b77cfcdbe4)
+# Ignore VCS directories, you can use the same kind of rule outside
+# OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
 <**/.svn>: -traverse
 <**/.svn>: not_hygienic
@@ -17,9 +17,9 @@
 "src/bitcoin.cmxs": use_bitcoin
 # Library bitcoin_ocsigen
 "src/bitcoin_ocsigen.cmxs": use_bitcoin_ocsigen
-<src/*.ml{,i}>: pkg_threads
 <src/*.ml{,i}>: pkg_lwt
 <src/*.ml{,i}>: pkg_ocsigenserver
+<src/*.ml{,i}>: pkg_threads
 # Library bitcoin_ocamlnet
 "src/bitcoin_ocamlnet.cmxs": use_bitcoin_ocamlnet
 <src/*.ml{,i}>: pkg_netclient
@@ -28,22 +28,22 @@
 <src/*.ml{,i}>: pkg_cohttp.lwt
 # Library bitcoin_ocurl
 "src/bitcoin_ocurl.cmxs": use_bitcoin_ocurl
-<src/*.ml{,i}>: use_bitcoin
-<src/*.ml{,i}>: pkg_curl
 <src/*.ml{,i}>: pkg_cryptokit
+<src/*.ml{,i}>: pkg_curl
 <src/*.ml{,i}>: pkg_yojson
+<src/*.ml{,i}>: use_bitcoin
 # Executable test
-<test/test.{native,byte}>: use_bitcoin_ocurl
-<test/test.{native,byte}>: use_bitcoin
-<test/test.{native,byte}>: pkg_oUnit
-<test/test.{native,byte}>: pkg_curl
 <test/test.{native,byte}>: pkg_cryptokit
+<test/test.{native,byte}>: pkg_curl
+<test/test.{native,byte}>: pkg_oUnit
 <test/test.{native,byte}>: pkg_yojson
-<test/*.ml{,i}>: use_bitcoin_ocurl
-<test/*.ml{,i}>: use_bitcoin
-<test/*.ml{,i}>: pkg_oUnit
-<test/*.ml{,i}>: pkg_curl
+<test/test.{native,byte}>: use_bitcoin
+<test/test.{native,byte}>: use_bitcoin_ocurl
 <test/*.ml{,i}>: pkg_cryptokit
+<test/*.ml{,i}>: pkg_curl
+<test/*.ml{,i}>: pkg_oUnit
 <test/*.ml{,i}>: pkg_yojson
+<test/*.ml{,i}>: use_bitcoin
+<test/*.ml{,i}>: use_bitcoin_ocurl
 # OASIS_STOP
 <src/bitcoin_ocsigen.ml>: pkg_lwt.syntax, syntax_camlp4o
