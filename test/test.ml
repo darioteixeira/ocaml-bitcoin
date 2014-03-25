@@ -103,8 +103,8 @@ let test_backupwallet global =
 let test_dumpprivkey global =
 	assert_raises (Bitcoin_error (-5, "Invalid Bitcoin address")) (fun () -> Testnet.dumpprivkey "");
 	let priv = Testnet.dumpprivkey global.address1 in
-	assert_raises (Bitcoin_error (-5, "Invalid private key")) (fun () -> Testnet.importprivkey "");
-	assert_raises (Bitcoin_error (-4, "Error adding key to wallet")) (fun () -> Testnet.importprivkey priv)
+	assert_raises (Bitcoin_error (-5, "Invalid private key encoding")) (fun () -> Testnet.importprivkey "");
+	Testnet.importprivkey priv
 
 let test_getaccount global =
 	assert_equal global.account3 (Testnet.getaccount global.address3)
@@ -121,7 +121,7 @@ let test_getbalance global =
 
 let test_getblock global =
 	let genesis_hash = Testnet.getblockhash 0 in
-	let genesis_block = Testnet.getblock genesis_hash in
+	let genesis_block = Testnet.getblock_verbose genesis_hash in
 	assert_equal (`Int 0) (List.assoc "height" genesis_block)
 
 let test_getblockcount global =
@@ -163,7 +163,7 @@ let test_listreceivedbyaccount global =
 	assert_bool "number of accounts must be > 0" (List.length (Testnet.listreceivedbyaccount ()) > 0)
 
 let test_listunspent global =
-	assert_bool "number of unspent transactions must be > 0" (List.length (Testnet.listunspent ()) > 0)
+	assert_bool "number of unspent transactions must be > 0" (List.length (Testnet.listunspent ~minconf:0 ()) > 0)
 
 let test_move global =
 	let default_balance = Testnet.getbalance ~account:`Default () in
