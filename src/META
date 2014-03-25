@@ -1,6 +1,6 @@
 # OASIS_START
-# DO NOT EDIT (digest: b519ef97646cdfb2e71620c86b00276d)
-version = "1.1.1"
+# DO NOT EDIT (digest: 51a120ab656ab29c5a7aee51c251b3d7)
+version = "2.0"
 description =
 "Library offering an OCaml interface to the official Bitcoin client API"
 requires = "cryptokit yojson"
@@ -10,7 +10,7 @@ archive(native) = "bitcoin.cmxa"
 archive(native, plugin) = "bitcoin.cmxs"
 exists_if = "bitcoin.cma"
 package "ocurl" (
- version = "1.1.1"
+ version = "2.0"
  description =
  "Library offering an OCaml interface to the official Bitcoin client API"
  requires = "curl bitcoin"
@@ -22,7 +22,7 @@ package "ocurl" (
 )
 
 package "ocsigen" (
- version = "1.1.1"
+ version = "2.0"
  description =
  "Library offering an OCaml interface to the official Bitcoin client API"
  requires = "threads lwt ocsigenserver bitcoin"
@@ -34,7 +34,7 @@ package "ocsigen" (
 )
 
 package "ocamlnet" (
- version = "1.1.1"
+ version = "2.0"
  description =
  "Library offering an OCaml interface to the official Bitcoin client API"
  requires = "netclient bitcoin"
@@ -46,7 +46,7 @@ package "ocamlnet" (
 )
 
 package "cohttp" (
- version = "1.1.1"
+ version = "2.0"
  description =
  "Library offering an OCaml interface to the official Bitcoin client API"
  requires = "cohttp.lwt bitcoin"

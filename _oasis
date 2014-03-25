@@ -1,6 +1,6 @@
 OASISFormat:		0.3
 Name:			OCaml-bitcoin
-Version:		1.1.1
+Version:		2.0
 Synopsis:		Library offering an OCaml interface to the official Bitcoin client API
 Authors:		Dario Teixeira
 License:		GPL-2.0
@@ -64,48 +64,7 @@ Library "bitcoin_ocurl"
   FindlibParent:        bitcoin
   FindlibName:          ocurl
 
-Document "bitcoin-full-api"
-  Build$:		flag(ocamlnet) && flag(ocsigen) && flag(cohttp) && flag(ocurl)
-  Title:		API reference for OCaml-bitcoin
-  Type:			ocamlbuild (0.3)
-  Install:		true
-  InstallDir:		$htmldir
-  BuildTools:		ocamldoc
-  XOCamlbuildPath:	src
-  XOCamlbuildLibraries:	bitcoin, bitcoin.ocsigen, bitcoin.ocamlnet, bitcoin.cohttp
-
-Document "bitcoin-ocamlnet-api"
-  Build$:		flag(ocamlnet) && !flag(ocsigen) && !flag(cohttp) && !flag(ocurl)
-  Title:		API reference for OCaml-bitcoin
-  Type:			ocamlbuild (0.3)
-  Install:		true
-  InstallDir:		$htmldir
-  BuildTools:		ocamldoc
-  XOCamlbuildPath:	src
-  XOCamlbuildLibraries:	bitcoin, bitcoin.ocamlnet
-
-Document "bitcoin-ocsigen-api"
-  Build$:		!flag(ocamlnet) && flag(ocsigen) && !flag(cohttp) && !flag(ocurl)
-  Title:		API reference for OCaml-bitcoin
-  Type:			ocamlbuild (0.3)
-  Install:		true
-  InstallDir:		$htmldir
-  BuildTools:		ocamldoc
-  XOCamlbuildPath:	src
-  XOCamlbuildLibraries:	bitcoin, bitcoin.ocsigen
-
-Document "bitcoin-cohttp-api"
-  Build$:		!flag(ocamlnet) && !flag(ocsigen) && flag(cohttp) && !flag(ocurl)
-  Title:		API reference for OCaml-bitcoin
-  Type:			ocamlbuild (0.3)
-  Install:		true
-  InstallDir:		$htmldir
-  BuildTools:		ocamldoc
-  XOCamlbuildPath:	src
-  XOCamlbuildLibraries:	bitcoin, bitcoin.cohttp
-
 Document "bitcoin-api"
-  Build$:		!flag(ocamlnet) && !flag(ocsigen) && !flag(cohttp) && !flag(ocurl)
   Title:		API reference for OCaml-bitcoin
   Type:			ocamlbuild (0.3)
   Install:		true
@@ -115,13 +74,14 @@ Document "bitcoin-api"
   XOCamlbuildLibraries:	bitcoin
 
 Executable test
-  Build$:		flag(tests) && flag(ocurl)
+  Build$:		flag(tests) && flag(ocamlnet)
   Path:			test
   MainIs:		test.ml
   Install:		false
-  BuildDepends:		oUnit (>= 1.1.0), bitcoin.ocurl
+  BuildDepends:		oUnit (>= 1.1.0), bitcoin.ocamlnet
   CompiledObject:	best
 
 Test main
-  Run$:			flag(tests) && flag(ocurl)
+  Run$:			flag(tests) && flag(ocamlnet)
   Command:		$test
+
