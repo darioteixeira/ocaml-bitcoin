@@ -287,7 +287,7 @@ sig
 	    is only performed if the account balance is sufficient to fund the transfer.  {b (Requires unlocked wallet)}. *)
 
 	val sendtoaddress: ?conn:conn_t -> ?comment:string -> ?recipient:string -> address_t -> amount_t -> txid_t monad_t
-	(** Transfers a given amount to the specified address, deducting the balance of the defaul account.
+	(** Transfers a given amount to the specified address, deducting the balance of the default account.
 	    If successful, the function returns the ID of the transaction recording the transfer. The optional
 	    parameter [comment] allows you to record an arbitrary comment about this transaction, whereas
 	    the also optional [recipient] assigns a string identifier to the recipient address.  Note that
