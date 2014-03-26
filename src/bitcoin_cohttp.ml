@@ -33,10 +33,8 @@ struct
     let headers = C.Header.of_list headers in
     let uri = Uri.make ~scheme:"http" ~host ~port ~path:uri () in
     Lwt.try_bind
-      (fun () -> CU.Client.call ~chunked:false ~headers ?body:(CB.body_of_string request) `POST uri)
-      (function
-        | Some (_, b) -> CB.string_of_body b
-        | None -> Lwt.fail No_response)
+      (fun () -> CU.Client.call ~chunked:false ~headers ~body:(CB.of_string request) `POST uri)
+      (fun (_, b) -> CB.to_string b)
       (fun exn ->
          Lwt_io.printf "Cohttp_lwt_unix.Client.call: caught %s\n" (Printexc.to_string exn) >>= fun () ->
          Lwt.fail exn)
