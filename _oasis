@@ -3,7 +3,7 @@ Name:			OCaml-bitcoin
 Version:		2.0
 Synopsis:		Library offering an OCaml interface to the official Bitcoin client API
 Authors:		Dario Teixeira
-License:		GPL-2.0
+License:		LGPL-2.1 with OCaml linking exception
 BuildTools:		ocamlbuild, ocamldoc
 Plugins:		META (0.3), DevFiles (0.3)
 
