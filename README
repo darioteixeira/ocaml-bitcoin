@@ -19,16 +19,18 @@ network to a running Bitcoin daemon offering the client API.
 ===============
 
 The core library depends solely on Yojson and Ocamlnet's Netstring [2,3].
-If you wish to build the auxiliary 'bitcoin_ocsigen' library you will
-also need Lwt and the Ocsigen server libraries [4, 5].  If you wish to
-build the auxiliary 'bitcoin_ocamlnet' library you will need Ocamlnet's
-Netclient [3].
+The optional auxiliary engines each have their own set of dependencies:
+
+  * Bitcoin_ocamlnet: Ocamlnet's Netclient [3].
+  * Bitcoin_ocsigen: Lwt and the Ocsigen server libraries [4, 5].
+  * Bitcoin_cohttp: Cohttp [6].
+  * Bitcoin_ocurl: OCurl [7].
 
 
 3. Building and installing
 ==========================
 
-The build system is generated with OASIS [6].  Run 'configure' if
+The build system is generated with OASIS [8].  Run 'configure' if
 you wish to modify the defaults.  Enter 'make' and 'make install'
 to build and install the libraries.  Enter 'make doc' to generate
 the API documentation.
@@ -41,6 +43,12 @@ OCaml-bitcoin is distributed under the terms of the GNU LGPL version 2.1
 (with OCaml linking exception).  See LICENSE file for full license text.
 
 
+5. Contributors
+===============
+
+Vincent Bernardoff contributed the engines based on OCurl and Cohttp.
+
+
 References
 ==========
 
@@ -49,5 +57,7 @@ References
 [3] http://projects.camlcity.org/projects/ocamlnet.html
 [4] http://ocsigen.org/lwt/
 [5] http://ocsigen.org/ocsigenserver/
-[6] http://oasis.forge.ocamlcore.org/
+[6] https://github.com/avsm/ocaml-cohttp
+[7] http://ocurl.forge.ocamlcore.org/
+[8] http://oasis.forge.ocamlcore.org/
 
