@@ -54,7 +54,7 @@ type conn_t =
 (**	Interface that any module offering HTTP POST client calls must obey.
 	Note that the module may require POST calls to be wrapped under a
 	custom monad, which must also be provided (use the identity monad
-	if an actual monad is not required).
+	if no actual monad is required).
 *)
 module type HTTPCLIENT =
 sig
