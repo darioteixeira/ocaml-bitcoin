@@ -82,6 +82,8 @@ module type ENGINE =
 sig
 	type 'a monad_t
 
+	val getinfo: ?conn:conn_t -> unit -> assoc_t monad_t
+
 	val addnode: ?conn:conn_t -> node_t -> [ `Add | `Remove | `Onetry ] -> unit monad_t
 	val getaddednodeinfo: ?conn:conn_t -> ?node:node_t -> unit -> node_t list monad_t
 	val getaddednodeinfo_verbose: ?conn:conn_t -> ?node:node_t -> unit -> assoc_t list monad_t
@@ -89,66 +91,6 @@ sig
 	val getnettotals: ?conn:conn_t -> unit -> assoc_t monad_t
 	val getpeerinfo: ?conn:conn_t -> unit -> assoc_t list monad_t
 	val ping: ?conn:conn_t -> unit -> unit monad_t
-
-	val dumpprivkey: ?conn:conn_t -> address_t -> priv_t monad_t
-	val dumpwallet: ?conn:conn_t -> string -> unit monad_t
-	val importprivkey: ?conn:conn_t -> ?account:account_t -> ?rescan:bool-> priv_t -> unit monad_t
-	val importwallet: ?conn:conn_t -> string -> unit monad_t
-
-	val getblocktemplate: ?conn:conn_t -> ?obj:assoc_t -> unit -> assoc_t monad_t
-	val getgenerate: ?conn:conn_t -> unit -> bool monad_t
-	val gethashespersec: ?conn:conn_t -> unit -> int monad_t
-	val getmininginfo: ?conn:conn_t -> unit -> assoc_t monad_t
-	val getnetworkhashps: ?conn:conn_t -> ?blocks:int -> ?height:int -> unit -> int monad_t
-	val getwork_with_data: ?conn:conn_t -> hexwork_t -> bool monad_t
-	val getwork_without_data: ?conn:conn_t -> unit -> assoc_t monad_t
-	val setgenerate: ?conn:conn_t -> ?genproclimit:int -> bool -> unit monad_t
-	val submitblock: ?conn:conn_t -> hexblk_t -> unit monad_t
-
-	val backupwallet: ?conn:conn_t -> string -> unit monad_t
-	val createmultisig: ?conn:conn_t -> int -> pub_t list -> (address_t * hexspk_t) monad_t
-	val encryptwallet: ?conn:conn_t -> string -> unit monad_t
-	val getaccount: ?conn:conn_t -> address_t -> account_t monad_t
-	val getaccountaddress: ?conn:conn_t -> account_t -> address_t monad_t
-	val getaddressesbyaccount: ?conn:conn_t -> account_t -> address_t list monad_t
-	val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> unit -> amount_t monad_t
-	val getinfo: ?conn:conn_t -> unit -> assoc_t monad_t
-	val getnewaddress: ?conn:conn_t -> ?account:account_t -> unit -> address_t monad_t
-	val getrawchangeaddress: ?conn:conn_t -> unit -> address_t monad_t
-	val getreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> account_t -> amount_t monad_t
-	val getreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> address_t -> amount_t monad_t
-	val gettransaction: ?conn:conn_t -> txid_t -> assoc_t monad_t
-	val getunconfirmedbalance: ?conn:conn_t -> unit -> amount_t monad_t
-	val keypoolrefill: ?conn:conn_t -> ?size:int -> unit -> unit monad_t
-	val listaccounts: ?conn:conn_t -> ?minconf:int -> unit -> (account_t * amount_t) list monad_t
-	val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
-	val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (account_t * amount_t * int) list monad_t
-	val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (address_t * account_t * amount_t * int * txid_t list) list monad_t
-	val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> unit -> (assoc_t list * blkhash_t) monad_t
-	val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> unit -> assoc_t list monad_t
-	val move: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> account_t -> amount_t -> bool monad_t
-	val sendfrom: ?conn:conn_t -> ?minconf:int -> ?comment:string -> ?recipient:string -> account_t -> address_t -> amount_t -> txid_t monad_t
-	val sendmany: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> (address_t * amount_t) list -> txid_t monad_t
-	val sendtoaddress: ?conn:conn_t -> ?comment:string -> ?recipient:string -> address_t -> amount_t -> txid_t monad_t
-	val setaccount: ?conn:conn_t -> address_t -> account_t -> unit monad_t
-	val settxfee: ?conn:conn_t -> amount_t -> bool monad_t
-	val signmessage: ?conn:conn_t -> address_t -> string -> sig_t monad_t
-	val validateaddress: ?conn:conn_t -> address_t -> assoc_t option monad_t
-	val verifymessage: ?conn:conn_t -> address_t -> sig_t -> string -> bool monad_t
-	val walletlock: ?conn:conn_t -> unit -> unit monad_t
-	val walletpassphrase: ?conn:conn_t -> string -> int -> unit monad_t
-	val walletpassphrasechange: ?conn:conn_t -> string -> string -> unit monad_t
-
-	val createrawtransaction: ?conn:conn_t -> txoutput_t list -> (address_t * amount_t) list -> hextx_t monad_t
-	val decoderawtransaction: ?conn:conn_t -> hextx_t -> assoc_t monad_t
-	val decodescript: ?conn:conn_t -> hexspk_t -> assoc_t monad_t
-	val getrawtransaction: ?conn:conn_t -> txid_t -> hextx_t monad_t
-	val getrawtransaction_verbose: ?conn:conn_t -> txid_t -> assoc_t monad_t
-	val listlockunspent: ?conn:conn_t -> unit -> txoutput_t list monad_t
-	val listunspent: ?conn:conn_t -> ?minconf:int -> ?maxconf:int -> ?addresses:address_t list -> unit -> assoc_t list monad_t
-	val lockunspent: ?conn:conn_t -> ?outputs:txoutput_t list -> [ `Lock | `Unlock ] -> bool monad_t
-	val sendrawtransaction: ?conn:conn_t -> ?allow_high_fees:bool -> hextx_t -> txid_t monad_t
-	val signrawtransaction: ?conn:conn_t -> ?parents:(txoutput_t * hexspk_t) list -> ?keys:priv_t list -> ?sighash:([ `All | `None | `Single ] * bool) -> hextx_t -> (hextx_t * bool) monad_t
 
 	val getbestblockhash: ?conn:conn_t -> unit -> blkhash_t monad_t
 	val getblock: ?conn:conn_t -> blkhash_t -> hexblk_t monad_t
@@ -161,6 +103,65 @@ sig
 	val gettxout: ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t monad_t
 	val gettxoutsetinfo: ?conn:conn_t -> unit -> assoc_t monad_t
 	val verifychain: ?conn:conn_t -> ?checklevel:int -> ?numblocks:int -> unit -> bool monad_t
+
+	val getblocktemplate: ?conn:conn_t -> ?obj:assoc_t -> unit -> assoc_t monad_t
+	val getgenerate: ?conn:conn_t -> unit -> bool monad_t
+	val gethashespersec: ?conn:conn_t -> unit -> int monad_t
+	val getmininginfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	val getnetworkhashps: ?conn:conn_t -> ?blocks:int -> ?height:int -> unit -> int monad_t
+	val getwork_with_data: ?conn:conn_t -> hexwork_t -> bool monad_t
+	val getwork_without_data: ?conn:conn_t -> unit -> assoc_t monad_t
+	val setgenerate: ?conn:conn_t -> ?genproclimit:int -> bool -> unit monad_t
+	val submitblock: ?conn:conn_t -> hexblk_t -> unit monad_t
+
+	val createrawtransaction: ?conn:conn_t -> txoutput_t list -> (address_t * amount_t) list -> hextx_t monad_t
+	val decoderawtransaction: ?conn:conn_t -> hextx_t -> assoc_t monad_t
+	val decodescript: ?conn:conn_t -> hexspk_t -> assoc_t monad_t
+	val getrawtransaction: ?conn:conn_t -> txid_t -> hextx_t monad_t
+	val getrawtransaction_verbose: ?conn:conn_t -> txid_t -> assoc_t monad_t
+	val sendrawtransaction: ?conn:conn_t -> ?allow_high_fees:bool -> hextx_t -> txid_t monad_t
+	val signrawtransaction: ?conn:conn_t -> ?parents:(txoutput_t * hexspk_t) list -> ?keys:priv_t list -> ?sighash:([ `All | `None | `Single ] * bool) -> hextx_t -> (hextx_t * bool) monad_t
+
+	val createmultisig: ?conn:conn_t -> int -> pub_t list -> (address_t * hexspk_t) monad_t
+	val validateaddress: ?conn:conn_t -> address_t -> assoc_t option monad_t
+	val verifymessage: ?conn:conn_t -> address_t -> sig_t -> string -> bool monad_t
+
+	val backupwallet: ?conn:conn_t -> string -> unit monad_t
+	val dumpprivkey: ?conn:conn_t -> address_t -> priv_t monad_t
+	val dumpwallet: ?conn:conn_t -> string -> unit monad_t
+	val encryptwallet: ?conn:conn_t -> string -> unit monad_t
+	val getaccount: ?conn:conn_t -> address_t -> account_t monad_t
+	val getaccountaddress: ?conn:conn_t -> account_t -> address_t monad_t
+	val getaddressesbyaccount: ?conn:conn_t -> account_t -> address_t list monad_t
+	val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> unit -> amount_t monad_t
+	val getnewaddress: ?conn:conn_t -> ?account:account_t -> unit -> address_t monad_t
+	val getrawchangeaddress: ?conn:conn_t -> unit -> address_t monad_t
+	val getreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> account_t -> amount_t monad_t
+	val getreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> address_t -> amount_t monad_t
+	val gettransaction: ?conn:conn_t -> txid_t -> assoc_t monad_t
+	val getunconfirmedbalance: ?conn:conn_t -> unit -> amount_t monad_t
+	val importprivkey: ?conn:conn_t -> ?account:account_t -> ?rescan:bool-> priv_t -> unit monad_t
+	val importwallet: ?conn:conn_t -> string -> unit monad_t
+	val keypoolrefill: ?conn:conn_t -> ?size:int -> unit -> unit monad_t
+	val listaccounts: ?conn:conn_t -> ?minconf:int -> unit -> (account_t * amount_t) list monad_t
+	val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
+	val listlockunspent: ?conn:conn_t -> unit -> txoutput_t list monad_t
+	val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (account_t * amount_t * int) list monad_t
+	val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (address_t * account_t * amount_t * int * txid_t list) list monad_t
+	val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> unit -> (assoc_t list * blkhash_t) monad_t
+	val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> unit -> assoc_t list monad_t
+	val listunspent: ?conn:conn_t -> ?minconf:int -> ?maxconf:int -> ?addresses:address_t list -> unit -> assoc_t list monad_t
+	val lockunspent: ?conn:conn_t -> ?outputs:txoutput_t list -> [ `Lock | `Unlock ] -> bool monad_t
+	val move: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> account_t -> amount_t -> bool monad_t
+	val sendfrom: ?conn:conn_t -> ?minconf:int -> ?comment:string -> ?recipient:string -> account_t -> address_t -> amount_t -> txid_t monad_t
+	val sendmany: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> (address_t * amount_t) list -> txid_t monad_t
+	val sendtoaddress: ?conn:conn_t -> ?comment:string -> ?recipient:string -> address_t -> amount_t -> txid_t monad_t
+	val setaccount: ?conn:conn_t -> address_t -> account_t -> unit monad_t
+	val settxfee: ?conn:conn_t -> amount_t -> bool monad_t
+	val signmessage: ?conn:conn_t -> address_t -> string -> sig_t monad_t
+	val walletlock: ?conn:conn_t -> unit -> unit monad_t
+	val walletpassphrase: ?conn:conn_t -> string -> int -> unit monad_t
+	val walletpassphrasechange: ?conn:conn_t -> string -> string -> unit monad_t
 end
 
 

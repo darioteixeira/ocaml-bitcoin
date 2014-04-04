@@ -83,7 +83,16 @@ let () =
 (********************************************************************************)
 
 (********************************************************************************)
-(**	{2 rpcnet}								*)
+(**	{2 Overall control/query calls}						*)
+(********************************************************************************)
+
+let test_getinfo global = match List.assoc "blocks" (Testnet.getinfo ()) with
+	| `Int x -> assert_bool "block count must be > 0" (x > 0)
+	| _	 -> assert_failure "test_getinfo"
+
+
+(********************************************************************************)
+(**	{2 P2P networking}							*)
 (********************************************************************************)
 
 let test_addnode global =
@@ -102,18 +111,23 @@ let test_getconnectioncount global =
 
 
 (********************************************************************************)
-(**	{2 rpcdump}								*)
+(**	{2 Block chain and UTXO}						*)
 (********************************************************************************)
 
-let test_dumpprivkey global =
-	assert_raises (Bitcoin_error (-5, "Invalid Bitcoin address")) (fun () -> Testnet.dumpprivkey "");
-	let priv = Testnet.dumpprivkey global.address1 in
-	assert_raises (Bitcoin_error (-5, "Invalid private key encoding")) (fun () -> Testnet.importprivkey "");
-	Testnet.importprivkey priv
+let test_getblock global =
+	let genesis_hash = Testnet.getblockhash 0 in
+	let genesis_block = Testnet.getblock_verbose genesis_hash in
+	assert_equal (`Int 0) (List.assoc "height" genesis_block)
+
+let test_getblockcount global =
+	assert_bool "block count must be > 0" (Testnet.getblockcount () > 0)
+
+let test_getdifficulty global =
+	assert_bool "difficulty must be >= 0.0" (Testnet.getdifficulty () >= 0.0)
 
 
 (********************************************************************************)
-(**	{2 rpcmining}								*)
+(**	{2 Mining}								*)
 (********************************************************************************)
 
 let test_getgenerate global =
@@ -128,11 +142,26 @@ let test_gethashespersec global =
 
 
 (********************************************************************************)
-(**	{2 rpcwallet}								*)
+(**	{2 Utility functions}							*)
+(********************************************************************************)
+
+let test_validateaddress global =
+	assert_bool "valid address not reported as such" (Testnet.validateaddress global.address1 <> None);
+	assert_bool "invalid address not reported as such" (Testnet.validateaddress "" = None)
+
+
+(********************************************************************************)
+(**	{2 Wallet}								*)
 (********************************************************************************)
 
 let test_backupwallet global =
 	bracket_tmpfile (fun (fname, _) -> Testnet.backupwallet fname) ()
+
+let test_dumpprivkey global =
+	assert_raises (Bitcoin_error (-5, "Invalid Bitcoin address")) (fun () -> Testnet.dumpprivkey "");
+	let priv = Testnet.dumpprivkey global.address1 in
+	assert_raises (Bitcoin_error (-5, "Invalid private key encoding")) (fun () -> Testnet.importprivkey "");
+	Testnet.importprivkey priv
 
 let test_getaccount global =
 	assert_equal global.account3 (Testnet.getaccount global.address3)
@@ -146,10 +175,6 @@ let test_getaddressesbyaccount global =
 let test_getbalance global =
 	let balance = Testnet.getbalance () in
 	assert_bool "Global balance must be >= 0" (balance >= 0L)
-
-let test_getinfo global = match List.assoc "blocks" (Testnet.getinfo ()) with
-	| `Int x -> assert_bool "block count must be > 0" (x > 0)
-	| _	 -> assert_failure "test_getinfo"
 
 let test_getreceivedbyaccount global =
 	assert_bool "Received amount must be >= 0" (Testnet.getreceivedbyaccount global.account1 >= 0L)
@@ -165,6 +190,9 @@ let test_listaddressgroupings global =
 
 let test_listreceivedbyaccount global =
 	assert_bool "number of accounts must be > 0" (List.length (Testnet.listreceivedbyaccount ()) > 0)
+
+let test_listunspent global =
+	assert_bool "number of unspent transactions must be > 0" (List.length (Testnet.listunspent ~minconf:0 ()) > 0)
 
 let test_move global =
 	let default_balance = Testnet.getbalance ~account:`Default () in
@@ -223,34 +251,6 @@ let test_settxfee global =
 	let current' = gettxfee () in
 	assert_equal current current'
 
-let test_validateaddress global =
-	assert_bool "valid address not reported as such" (Testnet.validateaddress global.address1 <> None);
-	assert_bool "invalid address not reported as such" (Testnet.validateaddress "" = None)
-
-
-(********************************************************************************)
-(**	{2 rpcrawtransaction}							*)
-(********************************************************************************)
-
-let test_listunspent global =
-	assert_bool "number of unspent transactions must be > 0" (List.length (Testnet.listunspent ~minconf:0 ()) > 0)
-
-
-(********************************************************************************)
-(**	{2 rpcblockchain}							*)
-(********************************************************************************)
-
-let test_getblock global =
-	let genesis_hash = Testnet.getblockhash 0 in
-	let genesis_block = Testnet.getblock_verbose genesis_hash in
-	assert_equal (`Int 0) (List.assoc "height" genesis_block)
-
-let test_getblockcount global =
-	assert_bool "block count must be > 0" (Testnet.getblockcount () > 0)
-
-let test_getdifficulty global =
-	assert_bool "difficulty must be >= 0.0" (Testnet.getdifficulty () >= 0.0)
-
 
 (********************************************************************************)
 (**	{1 Main functions and values}						*)
@@ -262,43 +262,44 @@ let (!!) test = match !global with
 
 let suite = "OCaml-bitcoin" >:::
 	[
-	(* rpcnet *)
+	(* Overall control/query calls *)
+	"getinfo"		>:: !!test_getinfo;
+
+	(* P2P networking *)
 	"addnode"		>:: !!test_addnode;
 	"getconnectioncount"	>:: !!test_getconnectioncount;
 
-	(* rpcdump *)
-	"dumpprivkey"		>:: !!test_dumpprivkey;
+	(* Block chain and UTXO *)
+	"getblock"		>:: !!test_getblock;
+	"getblockcount"		>:: !!test_getblockcount;
+	"getdifficulty"		>:: !!test_getdifficulty;
 
-	(* rpcmining *)
+	(* Mining *)
 	"getgenerate"		>:: !!test_getgenerate;
 	"gethashespersec"	>:: !!test_gethashespersec;
 
-	(* rpcwallet *)
+	(* Utility functions *)
+	"validateaddress"	>:: !!test_validateaddress;
+
+	(* Wallet *)
 	"backupwallet"		>:: !!test_backupwallet;
+	"dumpprivkey"		>:: !!test_dumpprivkey;
 	"getaccount"		>:: !!test_getaccount;
 	"getaccountaddress"	>:: !!test_getaccountaddress;
 	"getaddressesbyaccount" >:: !!test_getaddressesbyaccount;
 	"getbalance"		>:: !!test_getbalance;
-	"getinfo"		>:: !!test_getinfo;
 	"getreceivedbyaccount"	>:: !!test_getreceivedbyaccount;
 	"getreceivedbyaddress"	>:: !!test_getreceivedbyaddress;
 	"listaccounts"		>:: !!test_listaccounts;
+	"listaddressgroupings"	>:: !!test_listaddressgroupings;
 	"listreceivedbyaccount" >:: !!test_listreceivedbyaccount;
+	"listunspent"		>:: !!test_listunspent;
 	"move"			>:: !!test_move;
 	"sendfrom"		>:: !!test_sendfrom;
 	"sendmany"		>:: !!test_sendmany;
 	"sendtoaddress"		>:: !!test_sendtoaddress;
 	"setaccount"		>:: !!test_setaccount;
 	"settxfee"		>:: !!test_settxfee;
-	"validateaddress"	>:: !!test_validateaddress;
-
-	(* rpcrawtransaction *)
-	"listunspent"		>:: !!test_listunspent;
-
-	(* rpcblockchain *)
-	"getblock"		>:: !!test_getblock;
-	"getblockcount"		>:: !!test_getblockcount;
-	"getdifficulty"		>:: !!test_getdifficulty;
 	]
 
 let _ =
