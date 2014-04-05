@@ -366,7 +366,18 @@ struct
 	(************************************************************************)
 
 	(************************************************************************)
-	(**	{3 rpcnet}							*)
+	(**	{3 Overall control/query calls}					*)
+	(************************************************************************)
+
+	let getinfo ?conn () =
+		invoke ?conn "getinfo" >|= to_assoc
+
+	let stop ?conn () =
+		invoke ?conn "stop" >|= to_unit
+
+
+	(************************************************************************)
+	(**	{3 P2P networking}						*)
 	(************************************************************************)
 
 	let addnode ?conn node op =
@@ -399,266 +410,7 @@ struct
 
 
 	(************************************************************************)
-	(**	{3 rpcdump}							*)
-	(************************************************************************)
-
-	let dumpprivkey ?conn address =
-		invoke ?conn ~params:[of_string address] "dumpprivkey" >|= to_string
-
-	let dumpwallet ?conn filename =
-		invoke ?conn ~params:[of_string filename] "dumpwallet" >|= to_unit
-
-	let importprivkey ?conn ?(account = `Default) ?(rescan = true) priv =
-		invoke ?conn ~params:[of_string priv; of_account account; of_bool rescan] "importprivkey" >|= to_unit
-
-	let importwallet ?conn filename =
-		invoke ?conn ~params:[of_string filename] "importwallet" >|= to_unit
-
-
-	(************************************************************************)
-	(**	{3 rpcmining}							*)
-	(************************************************************************)
-
-	let getblocktemplate ?conn ?obj () =
-		invoke ?conn ~params:(params_of_1tuple of_assoc obj) "getblocktemplate" >|= to_assoc
-
-	let getgenerate ?conn () =
-		invoke ?conn "getgenerate" >|= to_bool
-
-	let gethashespersec ?conn () =
-		invoke ?conn "gethashespersec" >|= to_int
-
-	let getmininginfo ?conn () =
-		invoke ?conn "getmininginfo" >|= to_assoc
-
-	let getnetworkhashps ?conn ?(blocks = 120) ?(height = -1) () =
-		invoke ?conn ~params:[of_int blocks; of_int height] "getnetworkhashps" >|= to_int
-
-	let getwork_with_data ?conn hexwork =
-		invoke ?conn ~params:[of_string hexwork] "getwork" >|= to_bool
-
-	let getwork_without_data ?conn () =
-		invoke ?conn "getwork" >|= to_assoc
-
-	let setgenerate ?conn ?(genproclimit = -1) gen =
-		invoke ?conn ~params:[of_bool gen; of_int genproclimit] "setgenerate" >|= to_unit
-
-	let submitblock ?conn hexblk =
-		invoke ?conn ~params:[of_string hexblk] "submitblock" >|= to_unit
-
-
-	(************************************************************************)
-	(**	{3 rpcwallet}							*)
-	(************************************************************************)
-
-	let backupwallet ?conn dest =
-		invoke ?conn ~params:[of_string dest] "backupwallet" >|= to_unit
-
-	let createmultisig ?conn num pubs =
-		let to_result = function
-			| `Assoc [("address", v1); ("redeemScript", v2)] -> (to_string v1, to_string v2)
-			| _						 -> assert false in
-		invoke ?conn ~params:[of_int num; of_list of_string pubs] "createmultisig" >|= to_result
-
-	let encryptwallet ?conn passphrase =
-		invoke ?conn ~params:[of_string passphrase] "encryptwallet" >|= to_unit
-
-	let getaccount ?conn address =
-		invoke ?conn ~params:[of_string address] "getaccount" >|= to_account
-
-	let getaccountaddress ?conn account =
-		invoke ?conn ~params:[of_account account] "getaccountaddress" >|= to_string
-
-	let getaddressesbyaccount ?conn account =
-		invoke ?conn ~params:[of_account account] "getaddressesbyaccount" >|= to_list to_string
-
-	let getbalance ?conn ?account ?(minconf = 1) () =
-		invoke ?conn ~params:[of_account_with_wildcard account; of_int minconf] "getbalance" >|= to_amount
-
-	let getinfo ?conn () =
-		invoke ?conn "getinfo" >|= to_assoc
-
-	let getnewaddress ?conn ?(account = `Default) () =
-		invoke ?conn ~params:[of_account account] "getnewaddress" >|= to_string
-
-	let getrawchangeaddress ?conn () =
-		invoke ?conn "getrawchangeaddress" >|= to_string
-
-	let getreceivedbyaccount ?conn ?(minconf = 1) account =
-		invoke ?conn ~params:[of_account account; of_int minconf] "getreceivedbyaccount" >|= to_amount
-
-	let getreceivedbyaddress ?conn ?(minconf = 1) address =
-		invoke ?conn ~params:[of_string address; of_int minconf] "getreceivedbyaddress" >|= to_amount
-
-	let gettransaction ?conn txid =
-		invoke ?conn ~params:[of_string txid] "gettransaction" >|= to_assoc
-
-	let getunconfirmedbalance ?conn () =
-		invoke ?conn "getunconfirmedbalance" >|= to_amount
-
-	let keypoolrefill ?conn ?(size = 100) () =
-		invoke ?conn ~params:[of_int size] "keypoolrefill" >|= to_unit
-
-	let listaccounts ?conn ?(minconf = 1) () =
-		let to_result = function
-			| `Assoc xs -> List.map (fun (k, v) -> ((account_of_string k), (to_amount v))) xs
-			| _	    -> assert false in
-		invoke ?conn ~params:[of_int minconf] "listaccounts" >|= to_result
-
-	let listaddressgroupings ?conn () =
-		let to_result = function
-			| `List [a; b]	  -> (to_string a, to_amount b, `Default)
-			| `List [a; b; c] -> (to_string a, to_amount b, to_account c)
-			| _		  -> assert false in
-		invoke ?conn "listaddressgroupings" >|= to_list (to_list to_result)
-
-	let listreceivedbyaccount ?conn ?(minconf = 1) ?(includeempty = false) () =
-		let to_result = function
-			| `Assoc [("account", v1); ("amount", v2); ("confirmations", v3)] -> (to_account v1, to_amount v2, to_int v3)
-			| _								  -> assert false in
-		invoke ?conn ~params:[of_int minconf; of_bool includeempty] "listreceivedbyaccount" >|= to_list to_result
-
-	let listreceivedbyaddress ?conn ?(minconf = 1) ?(includeempty = false) () =
-		let to_result = function
-			| `Assoc [("address", v1); ("account", v2); ("amount", v3); ("confirmations", v4); ("txids", v5)] ->
-				(to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
-			| _ ->
-				assert false in
-		invoke ?conn ~params:[of_int minconf; of_bool includeempty] "listreceivedbyaddress" >|= to_list to_result
-
-	let listsinceblock ?conn ?blockhash ?minconf () =
-		let to_result = function
-			| `Assoc [("transactions", v1); ("lastblock", v2)] -> (to_list to_assoc v1, to_string v2)
-			| _						   -> assert false in
-		invoke ?conn ~params:(params_of_2tuple "listsinceblock" of_string of_int (blockhash, minconf)) "listsinceblock" >|= to_result
-
-	let listtransactions ?conn ?account ?(count = 10) ?(from = 0) () =
-		invoke ?conn ~params:[of_account_with_wildcard account; of_int count; of_int from] "listtransactions" >|= to_list to_assoc
-
-	let move ?conn ?(minconf = 1) ?(comment = "") from_account to_account amount =
-		let params = [of_account from_account; of_account to_account; of_amount amount; of_int minconf; of_string comment] in
-		invoke ?conn ~params "move" >|= to_bool
-
-	let sendfrom ?conn ?(minconf = 1) ?(comment = "") ?(recipient = "") from_account to_address amount =
-		let params = [of_account from_account; of_string to_address; of_amount amount; of_int minconf; of_string comment; of_string recipient] in
-		invoke ?conn ~params "sendfrom" >|= to_string
-
-	let sendmany ?conn ?(minconf = 1) ?(comment = "") from_account targets =
-		let params =
-			[
-			of_account from_account;
-			of_assoc (List.map (fun (address, amount) -> (address, of_amount amount)) targets);
-			of_int minconf;
-			of_string comment;
-			] in
-		invoke ?conn ~params "sendmany" >|= to_string
-
-	let sendtoaddress ?conn ?(comment = "") ?(recipient = "") to_address amount =
-		let params = [of_string to_address; of_amount amount; of_string comment; of_string recipient] in
-		invoke ?conn ~params "sendtoaddress" >|= to_string
-
-	let setaccount ?conn address account =
-		invoke ?conn ~params:[of_string address; of_account account] "setaccount" >|= to_unit
-
-	let settxfee ?conn amount =
-		invoke ?conn ~params:[of_amount amount] "settxfee" >|= to_bool
-
-	let signmessage ?conn address msg =
-		invoke ?conn ~params:[of_string address; of_string msg] "signmessage" >|= to_string
-
-	let stop ?conn () =
-		invoke ?conn "stop" >|= to_unit
-
-	let validateaddress ?conn address =
-		let to_result = function
-			| `Assoc [("isvalid", `Bool false)] -> None
-			| x				    -> Some (to_assoc x) in
-		invoke ?conn ~params:[of_string address] "validateaddress" >|= to_result
-
-	let verifymessage ?conn address signature msg =
-		invoke ?conn ~params:[of_string address; of_string signature; of_string msg] "verifymessage" >|= to_bool
-
-	let walletlock ?conn () =
-		invoke ?conn "walletlock" >|= to_unit
-
-	let walletpassphrase ?conn passphrase timeout =
-		invoke ?conn ~params:[of_string passphrase; of_int timeout] "walletpassphrase" >|= to_unit
-
-	let walletpassphrasechange ?conn old_passphrase new_passphrase =
-		invoke ?conn ~params:[of_string old_passphrase; of_string new_passphrase] "walletpassphrasechange" >|= to_unit
-
-
-	(************************************************************************)
-	(**	{3 rpcrawtransaction}						*)
-	(************************************************************************)
-
-	let createrawtransaction ?conn inputs outputs =
-		let of_input (txid, vout) =
-			of_assoc [("txid", of_string txid); ("vout", of_int vout)] in
-		let of_output (address, amount) =
-			(address, of_amount amount) in
-		let params =
-			[
-			of_list of_input inputs;
-			of_assoc (List.map of_output outputs);
-			] in
-		invoke ?conn ~params "createrawtransaction" >|= to_string
-
-	let decoderawtransaction ?conn hextx =
-		invoke ?conn ~params:[of_string hextx] "decoderawtransaction" >|= to_assoc
-
-	let decodescript ?conn hexspk =
-		invoke ?conn ~params:[of_string hexspk] "decodescript" >|= to_assoc
-
-	let getrawtransaction ?conn txid =
-		invoke ?conn ~params:[of_string txid; of_int 0] "getrawtransaction" >|= to_string
-
-	let getrawtransaction_verbose ?conn txid =
-		invoke ?conn ~params:[of_string txid; of_int 1] "getrawtransaction" >|= to_assoc
-
-	let listlockunspent ?conn () =
-		let to_locked = function
-			| `Assoc [("txid", v1); ("vout", v2)] -> (to_string v1, to_int v2)
-			| _				      -> assert false in
-		invoke ?conn "listlockunspent" >|= to_list to_locked
-
-	let listunspent ?conn ?(minconf = 1) ?(maxconf = 9_999_999) ?(addresses = []) () =
-		invoke ?conn ~params:[of_int minconf; of_int maxconf; of_list of_string addresses] "listunspent" >|= to_list to_assoc
-
-	let lockunspent ?conn ?outputs op =
-		let bool_of_lockop = function
-			| `Lock	  -> false
-			| `Unlock -> true in
-		let of_output (txid, vout) =
-			of_assoc [("txid", of_string txid); ("vout", of_int vout)] in
-		let params = (bool_of_lockop op |> of_bool) :: params_of_1tuple (of_list of_output) outputs in
-		invoke ?conn ~params "lockunspent" >|= to_bool
-
-	let sendrawtransaction ?conn ?(allow_high_fees = false) hextx =
-		invoke ?conn ~params:[of_string hextx; of_bool allow_high_fees] "sendrawtransaction" >|= to_string
-
-	let signrawtransaction ?conn ?parents ?keys ?sighash hextx =
-		let of_parent ((txid, vout), scriptpubkey) =
-			of_assoc [("txid", of_string txid); ("vout", of_int vout); ("scriptPubKey", of_string scriptpubkey)] in
-		let of_parents =
-			of_list of_parent in
-		let of_keys =
-			of_list of_string in
-		let of_sighash (sigcomp, anyone_can_pay) =
-			let string_of_sigcomp = function
-				| `All	  -> "ALL"
-				| `None	  -> "NONE"
-				| `Single -> "SINGLE" in
-			(string_of_sigcomp sigcomp) ^ (if anyone_can_pay then "|ANYONECANPAY" else "") |> of_string in
-		let to_result = function
-			| `Assoc [("hex", `String hextx); ("complete", `Bool complete)] -> (hextx, complete)
-			| _								-> assert false in
-		let params = of_string hextx :: params_of_3tuple "signrawtransaction" of_parents of_keys of_sighash (parents, keys, sighash) in
-		invoke ?conn ~params "signrawtransaction" >|= to_result
-
-
-	(************************************************************************)
-	(**	{3 rpcblockchain}						*)
+	(**	{3 Block chain and UTXO}					*)
 	(************************************************************************)
 
 	let getbestblockhash ?conn () =
@@ -693,5 +445,258 @@ struct
 
 	let verifychain ?conn ?(checklevel = 3) ?(numblocks = 288) () =
 		invoke ?conn ~params:[of_int checklevel; of_int numblocks] "verifychain" >|= to_bool
+
+
+	(************************************************************************)
+	(**	{3 Mining}							*)
+	(************************************************************************)
+
+	let getblocktemplate ?conn ?obj () =
+		invoke ?conn ~params:(params_of_1tuple of_assoc obj) "getblocktemplate" >|= to_assoc
+
+	let getgenerate ?conn () =
+		invoke ?conn "getgenerate" >|= to_bool
+
+	let gethashespersec ?conn () =
+		invoke ?conn "gethashespersec" >|= to_int
+
+	let getmininginfo ?conn () =
+		invoke ?conn "getmininginfo" >|= to_assoc
+
+	let getnetworkhashps ?conn ?(blocks = 120) ?(height = -1) () =
+		invoke ?conn ~params:[of_int blocks; of_int height] "getnetworkhashps" >|= to_int
+
+	let getwork_with_data ?conn hexwork =
+		invoke ?conn ~params:[of_string hexwork] "getwork" >|= to_bool
+
+	let getwork_without_data ?conn () =
+		invoke ?conn "getwork" >|= to_assoc
+
+	let setgenerate ?conn ?(genproclimit = -1) gen =
+		invoke ?conn ~params:[of_bool gen; of_int genproclimit] "setgenerate" >|= to_unit
+
+	let submitblock ?conn hexblk =
+		invoke ?conn ~params:[of_string hexblk] "submitblock" >|= to_unit
+
+
+	(************************************************************************)
+	(**	{3 Raw transactions}						*)
+	(************************************************************************)
+
+	let createrawtransaction ?conn inputs outputs =
+		let of_input (txid, vout) =
+			of_assoc [("txid", of_string txid); ("vout", of_int vout)] in
+		let of_output (address, amount) =
+			(address, of_amount amount) in
+		let params =
+			[
+			of_list of_input inputs;
+			of_assoc (List.map of_output outputs);
+			] in
+		invoke ?conn ~params "createrawtransaction" >|= to_string
+
+	let decoderawtransaction ?conn hextx =
+		invoke ?conn ~params:[of_string hextx] "decoderawtransaction" >|= to_assoc
+
+	let decodescript ?conn hexspk =
+		invoke ?conn ~params:[of_string hexspk] "decodescript" >|= to_assoc
+
+	let getrawtransaction ?conn txid =
+		invoke ?conn ~params:[of_string txid; of_int 0] "getrawtransaction" >|= to_string
+
+	let getrawtransaction_verbose ?conn txid =
+		invoke ?conn ~params:[of_string txid; of_int 1] "getrawtransaction" >|= to_assoc
+
+	let sendrawtransaction ?conn ?(allow_high_fees = false) hextx =
+		invoke ?conn ~params:[of_string hextx; of_bool allow_high_fees] "sendrawtransaction" >|= to_string
+
+	let signrawtransaction ?conn ?parents ?keys ?sighash hextx =
+		let of_parent ((txid, vout), scriptpubkey) =
+			of_assoc [("txid", of_string txid); ("vout", of_int vout); ("scriptPubKey", of_string scriptpubkey)] in
+		let of_parents =
+			of_list of_parent in
+		let of_keys =
+			of_list of_string in
+		let of_sighash (sigcomp, anyone_can_pay) =
+			let string_of_sigcomp = function
+				| `All	  -> "ALL"
+				| `None	  -> "NONE"
+				| `Single -> "SINGLE" in
+			(string_of_sigcomp sigcomp) ^ (if anyone_can_pay then "|ANYONECANPAY" else "") |> of_string in
+		let to_result = function
+			| `Assoc [("hex", `String hextx); ("complete", `Bool complete)] -> (hextx, complete)
+			| _								-> assert false in
+		let params = of_string hextx :: params_of_3tuple "signrawtransaction" of_parents of_keys of_sighash (parents, keys, sighash) in
+		invoke ?conn ~params "signrawtransaction" >|= to_result
+
+
+	(************************************************************************)
+	(**	{3 Utility functions}						*)
+	(************************************************************************)
+
+	let createmultisig ?conn num pubs =
+		let to_result = function
+			| `Assoc [("address", v1); ("redeemScript", v2)] -> (to_string v1, to_string v2)
+			| _						 -> assert false in
+		invoke ?conn ~params:[of_int num; of_list of_string pubs] "createmultisig" >|= to_result
+
+	let validateaddress ?conn address =
+		let to_result = function
+			| `Assoc [("isvalid", `Bool false)] -> None
+			| x				    -> Some (to_assoc x) in
+		invoke ?conn ~params:[of_string address] "validateaddress" >|= to_result
+
+	let verifymessage ?conn address signature msg =
+		invoke ?conn ~params:[of_string address; of_string signature; of_string msg] "verifymessage" >|= to_bool
+
+
+	(************************************************************************)
+	(**	{3 Wallet}							*)
+	(************************************************************************)
+
+	let backupwallet ?conn dest =
+		invoke ?conn ~params:[of_string dest] "backupwallet" >|= to_unit
+
+	let dumpprivkey ?conn address =
+		invoke ?conn ~params:[of_string address] "dumpprivkey" >|= to_string
+
+	let dumpwallet ?conn filename =
+		invoke ?conn ~params:[of_string filename] "dumpwallet" >|= to_unit
+
+	let encryptwallet ?conn passphrase =
+		invoke ?conn ~params:[of_string passphrase] "encryptwallet" >|= to_unit
+
+	let getaccount ?conn address =
+		invoke ?conn ~params:[of_string address] "getaccount" >|= to_account
+
+	let getaccountaddress ?conn account =
+		invoke ?conn ~params:[of_account account] "getaccountaddress" >|= to_string
+
+	let getaddressesbyaccount ?conn account =
+		invoke ?conn ~params:[of_account account] "getaddressesbyaccount" >|= to_list to_string
+
+	let getbalance ?conn ?account ?(minconf = 1) () =
+		invoke ?conn ~params:[of_account_with_wildcard account; of_int minconf] "getbalance" >|= to_amount
+
+	let getnewaddress ?conn ?(account = `Default) () =
+		invoke ?conn ~params:[of_account account] "getnewaddress" >|= to_string
+
+	let getrawchangeaddress ?conn () =
+		invoke ?conn "getrawchangeaddress" >|= to_string
+
+	let getreceivedbyaccount ?conn ?(minconf = 1) account =
+		invoke ?conn ~params:[of_account account; of_int minconf] "getreceivedbyaccount" >|= to_amount
+
+	let getreceivedbyaddress ?conn ?(minconf = 1) address =
+		invoke ?conn ~params:[of_string address; of_int minconf] "getreceivedbyaddress" >|= to_amount
+
+	let gettransaction ?conn txid =
+		invoke ?conn ~params:[of_string txid] "gettransaction" >|= to_assoc
+
+	let getunconfirmedbalance ?conn () =
+		invoke ?conn "getunconfirmedbalance" >|= to_amount
+
+	let importprivkey ?conn ?(account = `Default) ?(rescan = true) priv =
+		invoke ?conn ~params:[of_string priv; of_account account; of_bool rescan] "importprivkey" >|= to_unit
+
+	let importwallet ?conn filename =
+		invoke ?conn ~params:[of_string filename] "importwallet" >|= to_unit
+
+	let keypoolrefill ?conn ?(size = 100) () =
+		invoke ?conn ~params:[of_int size] "keypoolrefill" >|= to_unit
+
+	let listaccounts ?conn ?(minconf = 1) () =
+		let to_result = function
+			| `Assoc xs -> List.map (fun (k, v) -> ((account_of_string k), (to_amount v))) xs
+			| _	    -> assert false in
+		invoke ?conn ~params:[of_int minconf] "listaccounts" >|= to_result
+
+	let listaddressgroupings ?conn () =
+		let to_result = function
+			| `List [a; b]	  -> (to_string a, to_amount b, `Default)
+			| `List [a; b; c] -> (to_string a, to_amount b, to_account c)
+			| _		  -> assert false in
+		invoke ?conn "listaddressgroupings" >|= to_list (to_list to_result)
+
+	let listlockunspent ?conn () =
+		let to_locked = function
+			| `Assoc [("txid", v1); ("vout", v2)] -> (to_string v1, to_int v2)
+			| _				      -> assert false in
+		invoke ?conn "listlockunspent" >|= to_list to_locked
+
+	let listreceivedbyaccount ?conn ?(minconf = 1) ?(includeempty = false) () =
+		let to_result = function
+			| `Assoc [("account", v1); ("amount", v2); ("confirmations", v3)] -> (to_account v1, to_amount v2, to_int v3)
+			| _								  -> assert false in
+		invoke ?conn ~params:[of_int minconf; of_bool includeempty] "listreceivedbyaccount" >|= to_list to_result
+
+	let listreceivedbyaddress ?conn ?(minconf = 1) ?(includeempty = false) () =
+		let to_result = function
+			| `Assoc [("address", v1); ("account", v2); ("amount", v3); ("confirmations", v4); ("txids", v5)] ->
+				(to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
+			| _ ->
+				assert false in
+		invoke ?conn ~params:[of_int minconf; of_bool includeempty] "listreceivedbyaddress" >|= to_list to_result
+
+	let listsinceblock ?conn ?blockhash ?minconf () =
+		let to_result = function
+			| `Assoc [("transactions", v1); ("lastblock", v2)] -> (to_list to_assoc v1, to_string v2)
+			| _						   -> assert false in
+		invoke ?conn ~params:(params_of_2tuple "listsinceblock" of_string of_int (blockhash, minconf)) "listsinceblock" >|= to_result
+
+	let listtransactions ?conn ?account ?(count = 10) ?(from = 0) () =
+		invoke ?conn ~params:[of_account_with_wildcard account; of_int count; of_int from] "listtransactions" >|= to_list to_assoc
+
+	let listunspent ?conn ?(minconf = 1) ?(maxconf = 9_999_999) ?(addresses = []) () =
+		invoke ?conn ~params:[of_int minconf; of_int maxconf; of_list of_string addresses] "listunspent" >|= to_list to_assoc
+
+	let lockunspent ?conn ?outputs op =
+		let bool_of_lockop = function
+			| `Lock	  -> false
+			| `Unlock -> true in
+		let of_output (txid, vout) =
+			of_assoc [("txid", of_string txid); ("vout", of_int vout)] in
+		let params = (bool_of_lockop op |> of_bool) :: params_of_1tuple (of_list of_output) outputs in
+		invoke ?conn ~params "lockunspent" >|= to_bool
+
+	let move ?conn ?(minconf = 1) ?(comment = "") from_account to_account amount =
+		let params = [of_account from_account; of_account to_account; of_amount amount; of_int minconf; of_string comment] in
+		invoke ?conn ~params "move" >|= to_bool
+
+	let sendfrom ?conn ?(minconf = 1) ?(comment = "") ?(recipient = "") from_account to_address amount =
+		let params = [of_account from_account; of_string to_address; of_amount amount; of_int minconf; of_string comment; of_string recipient] in
+		invoke ?conn ~params "sendfrom" >|= to_string
+
+	let sendmany ?conn ?(minconf = 1) ?(comment = "") from_account targets =
+		let params =
+			[
+			of_account from_account;
+			of_assoc (List.map (fun (address, amount) -> (address, of_amount amount)) targets);
+			of_int minconf;
+			of_string comment;
+			] in
+		invoke ?conn ~params "sendmany" >|= to_string
+
+	let sendtoaddress ?conn ?(comment = "") ?(recipient = "") to_address amount =
+		let params = [of_string to_address; of_amount amount; of_string comment; of_string recipient] in
+		invoke ?conn ~params "sendtoaddress" >|= to_string
+
+	let setaccount ?conn address account =
+		invoke ?conn ~params:[of_string address; of_account account] "setaccount" >|= to_unit
+
+	let settxfee ?conn amount =
+		invoke ?conn ~params:[of_amount amount] "settxfee" >|= to_bool
+
+	let signmessage ?conn address msg =
+		invoke ?conn ~params:[of_string address; of_string msg] "signmessage" >|= to_string
+
+	let walletlock ?conn () =
+		invoke ?conn "walletlock" >|= to_unit
+
+	let walletpassphrase ?conn passphrase timeout =
+		invoke ?conn ~params:[of_string passphrase; of_int timeout] "walletpassphrase" >|= to_unit
+
+	let walletpassphrasechange ?conn old_passphrase new_passphrase =
+		invoke ?conn ~params:[of_string old_passphrase; of_string new_passphrase] "walletpassphrasechange" >|= to_unit
 end
 
