@@ -83,6 +83,7 @@ sig
 	type 'a monad_t
 
 	val getinfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	val stop: ?conn:conn_t -> unit -> unit monad_t
 
 	val addnode: ?conn:conn_t -> node_t -> [ `Add | `Remove | `Onetry ] -> unit monad_t
 	val getaddednodeinfo: ?conn:conn_t -> ?node:node_t -> unit -> node_t list monad_t
@@ -564,6 +565,9 @@ struct
 
 	let signmessage ?conn address msg =
 		invoke ?conn ~params:[of_string address; of_string msg] "signmessage" >|= to_string
+
+	let stop ?conn () =
+		invoke ?conn "stop" >|= to_unit
 
 	let validateaddress ?conn address =
 		let to_result = function

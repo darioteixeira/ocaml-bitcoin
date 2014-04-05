@@ -101,6 +101,9 @@ sig
 	val getinfo: ?conn:conn_t -> unit -> assoc_t monad_t
 	(** Returns an object containing various state information. *)
 
+	val stop: ?conn:conn_t -> unit -> unit monad_t
+	(** Shuts down the server. *)
+
 
 	(************************************************************************)
 	(**	{2 P2P networking}						*)
