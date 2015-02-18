@@ -11,39 +11,39 @@
 (**	{1 Exceptions}								*)
 (********************************************************************************)
 
-exception Unspecified_connection			(** Raised when connection parameter is not given and no default connection exists. *)
-exception Bitcoin_error of int * string			(** Error reported by the Bitcoin client. *)
-exception Internal_error of int * string		(** Unexpected response from the Bitcoin client *)
-exception Httpclient_error of exn			(** Connection error reported by the {!HTTPCLIENT} *)
+exception Unspecified_connection				(** Raised when connection parameter is not given and no default connection exists. *)
+exception Bitcoin_error of int * string				(** Error reported by the Bitcoin client. *)
+exception Internal_error of int * string			(** Unexpected response from the Bitcoin client *)
+exception Httpclient_error of exn				(** Connection error reported by the {!HTTPCLIENT} *)
 
 
 (********************************************************************************)
 (**	{1 Type definitions}							*)
 (********************************************************************************)
 
-type address_t = string					(** Bitcoin address (hash of the public portion of public/private ECDSA keypair) *)
-type account_t = [ `Default | `Named of string ]	(** Besides the default account, one may also create named accounts *)
-type amount_t = int64					(** Amount in BTC, represented as a multiple of Bitcoin's base unit (= 10 nanoBTC).*)
-type txid_t = string					(** Transaction identifier *)
-type txoutput_t = txid_t * int				(** Transaction output *)
-type blkhash_t = string					(** Block hash *)
-type priv_t = string					(** Private portion of public/private ECDSA keypair *)
-type pub_t = string					(** Public portion of a public/private ECDSA keypair *)
-type sig_t = string					(** Message signature *)
-type hextx_t = string					(** Hex representation of raw transaction *)
-type hexspk_t = string					(** Hex representation of script public key *)
-type hexblk_t = string					(** Hex representation of block data *)
-type hexwork_t = string					(** Hex representation of mining work data *)
-type node_t = string					(** Node representation *)
-type assoc_t = (string * Yojson.Safe.json) list		(** Association list *)
+type address_t = string						(** Bitcoin address (hash of the public portion of public/private ECDSA keypair) *)
+type account_t = [ `Default | `Named of string ]		(** Besides the default account, one may also create named accounts *)
+type amount_t = int64						(** Amount in BTC, represented as a multiple of Bitcoin's base unit (= 10 nanoBTC).*)
+type txid_t = string						(** Transaction identifier *)
+type txoutput_t = txid_t * int					(** Transaction output *)
+type blkhash_t = string						(** Block hash *)
+type priv_t = string						(** Private portion of public/private ECDSA keypair *)
+type sig_t = string						(** Message signature *)
+type hextx_t = string						(** Hex representation of raw transaction *)
+type hexspk_t = string						(** Hex representation of script public key *)
+type hexblk_t = string						(** Hex representation of block data *)
+type hexwork_t = string						(** Hex representation of mining work data *)
+type multi_t = [ `Address of address_t | `Hexspk of hexspk_t ]	(** Multi-signature addresses may take either format *)
+type node_t = string						(** Node representation *)
+type assoc_t = (string * Yojson.Safe.json) list			(** Association list *)
 
 type conn_t =
 	{
 	inet_addr: Unix.inet_addr;
 	host: string;
 	port: int;
-	username: string;				(* Should match [rpcuser] value in $HOME/.bitcoin/bitcoin.conf *)
-	password: string;				(* Should match [rpcpassword] value in $HOME/.bitcoin/bitcoin.conf *)
+	username: string;					(* Should match [rpcuser] value in $HOME/.bitcoin/bitcoin.conf *)
+	password: string;					(* Should match [rpcpassword] value in $HOME/.bitcoin/bitcoin.conf *)
 	}
 
 
@@ -95,48 +95,11 @@ sig
 
 
 	(************************************************************************)
-	(**	{2 Overall control/query calls}					*)
-	(************************************************************************)
-
-	val getinfo: ?conn:conn_t -> unit -> assoc_t monad_t
-	(** Returns an object containing various state information. *)
-
-	val stop: ?conn:conn_t -> unit -> unit monad_t
-	(** Shuts down the server. *)
-
-
-	(************************************************************************)
-	(**	{2 P2P networking}						*)
-	(************************************************************************)
-
-	val addnode: ?conn:conn_t -> node_t -> [ `Add | `Remove | `Onetry ] -> unit monad_t
-	(** Allows manually adding/removing a node. *)
-
-	val getaddednodeinfo: ?conn:conn_t -> ?node:node_t -> unit -> node_t list monad_t
-	(** Returns the list of nodes manually added with {!addnode}. *)
-
-	val getaddednodeinfo_verbose: ?conn:conn_t -> ?node:node_t -> unit -> assoc_t list monad_t
-	(** Returns a list with more information about the nodes manually added with {!addnode}. *)
-
-	val getconnectioncount: ?conn:conn_t -> unit -> int monad_t
-	(** Returns the number of connections to peer nodes. *)
-
-	val getnettotals: ?conn:conn_t -> unit -> assoc_t monad_t
-	(** Returns information about network traffic. *)
-
-	val getpeerinfo: ?conn:conn_t -> unit -> assoc_t list monad_t
-	(** Returns information about each connected peer. *)
-
-	val ping: ?conn:conn_t -> unit -> unit monad_t
-	(** Sends a ping to all other nodes.  Note that results are provided via {!getpeerinfo}. *)
-
-
-	(************************************************************************)
-	(**	{2 Block chain and UTXO}					*)
+	(**	{2 Block chain}							*)
 	(************************************************************************)
 
 	val getbestblockhash: ?conn:conn_t -> unit -> blkhash_t monad_t
-	(** Returns the block hash for the head block in the longest block chain. *)
+	(** Returns the block hash for the head block in the best block chain. *)
 
 	val getblock: ?conn:conn_t -> blkhash_t -> hexblk_t monad_t
 	(** Returns the hex-encoded, serialised data for the block with the given block hash. *)
@@ -144,14 +107,23 @@ sig
 	val getblock_verbose: ?conn:conn_t -> blkhash_t -> assoc_t monad_t
 	(** Returns the available data for the block with the given block hash. *)
 
+	val getblockchaininfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns information concerning the current state of the block chain. *)
+
 	val getblockcount: ?conn:conn_t -> unit -> int monad_t
-	(** Returns the number of blocks in the longest block chain. *)
+	(** Returns the number of blocks in the best block chain. *)
 
 	val getblockhash: ?conn:conn_t -> int -> blkhash_t monad_t
 	(** Returns the block hash for the block located at the given index in the longest block chain. *)
 
+	val getchaintips: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns information about the highest-height block (tip) of each local block chain. *)
+
 	val getdifficulty: ?conn:conn_t -> unit -> float monad_t
 	(** Returns the current difficulty (as a multiple of the minimum difficulty). *)
+
+	val getmempoolinfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns information about the node's current transaction memory pool. *)
 
 	val getrawmempool: ?conn:conn_t -> unit -> txid_t list monad_t
 	(** Returns all transaction IDs currently in the memory pool. *)
@@ -174,18 +146,31 @@ sig
 
 
 	(************************************************************************)
+	(**	{2 Overall control/query calls}					*)
+	(************************************************************************)
+
+	val stop: ?conn:conn_t -> unit -> unit monad_t
+	(** Shuts down the server. *)
+
+
+	(************************************************************************)
+	(**	{2 Generate}							*)
+	(************************************************************************)
+
+	val getgenerate: ?conn:conn_t -> unit -> bool monad_t
+	(** Are we currently trying to generate new blocks? *)
+
+	val setgenerate: ?conn:conn_t -> ?genproclimit:int -> bool -> unit monad_t
+	(** Turns on/off the generation of new blocks (a.k.a. "mining").
+	    If provided, [genproclimit] limits the number of CPUs to be used for generating. *)
+
+
+	(************************************************************************)
 	(**	{2 Mining}							*)
 	(************************************************************************)
 
 	val getblocktemplate: ?conn:conn_t -> ?obj:assoc_t -> unit -> assoc_t monad_t
 	(** Returns data needed to construct a block to work on. *)
-
-	val getgenerate: ?conn:conn_t -> unit -> bool monad_t
-	(** Are we currently trying to generate new blocks? *)
-
-	val gethashespersec: ?conn:conn_t -> unit -> int monad_t
-	(** Returns number of hashes per second we currently attain when attempting block generation.
-	    Note that it returns 0 if block generation is switched off. *)
 
 	val getmininginfo: ?conn:conn_t -> unit -> assoc_t monad_t
 	(** Returns an object containing mining related information. *)
@@ -193,18 +178,41 @@ sig
 	val getnetworkhashps: ?conn:conn_t -> ?blocks:int -> ?height:int -> unit -> int monad_t
 	(** Returns the estimated number of hashes per second of the entire network *)
 
-	val getwork_with_data: ?conn:conn_t -> hexwork_t -> bool monad_t
-	(** Tries to solve the given block, returning a boolean indicating success status. *)
-
-	val getwork_without_data: ?conn:conn_t -> unit -> assoc_t monad_t
-	(** Returns formatted hash data to work on. *)
-
-	val setgenerate: ?conn:conn_t -> ?genproclimit:int -> bool -> unit monad_t
-	(** Turns on/off the generation of new blocks (a.k.a. "mining").
-	    If provided, [genproclimit] limits the number of CPUs to be used for generating. *)
+	val prioritisetransaction: ?conn:conn_t -> txid_t -> float -> amount_t -> bool monad_t
+	(** [prioritisetransaction txid delta_prio delta_fee] adjusts the priority of transaction [txid]
+	    by [delta_prio], while also adjusting the transaction fee by [delta_fee]. *)
 
 	val submitblock: ?conn:conn_t -> hexblk_t -> unit monad_t
 	(** Attempts to submit new block to network. *)
+
+
+	(************************************************************************)
+	(**	{2 P2P networking}						*)
+	(************************************************************************)
+
+	val addnode: ?conn:conn_t -> node_t -> [ `Add | `Remove | `Onetry ] -> unit monad_t
+	(** Allows manually adding/removing a node. *)
+
+	val getaddednodeinfo: ?conn:conn_t -> ?node:node_t -> unit -> node_t list monad_t
+	(** Returns the list of nodes manually added with {!addnode}. *)
+
+	val getaddednodeinfo_verbose: ?conn:conn_t -> ?node:node_t -> unit -> assoc_t list monad_t
+	(** Returns a list with more information about the nodes manually added with {!addnode}. *)
+
+	val getconnectioncount: ?conn:conn_t -> unit -> int monad_t
+	(** Returns the number of connections to peer nodes. *)
+
+	val getnettotals: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns information about network traffic. *)
+
+	val getnetworkinfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns miscelaneous information concerning the node's connection to the P2P network. *)
+
+	val getpeerinfo: ?conn:conn_t -> unit -> assoc_t list monad_t
+	(** Returns information about each connected peer. *)
+
+	val ping: ?conn:conn_t -> unit -> unit monad_t
+	(** Sends a ping to all other nodes.  Note that results are provided via {!getpeerinfo}. *)
 
 
 	(************************************************************************)
@@ -260,9 +268,18 @@ sig
 	(**	{2 Utility functions}						*)
 	(************************************************************************)
 
-	val createmultisig: ?conn:conn_t -> int -> pub_t list -> (address_t * hexspk_t) monad_t
+	val createmultisig: ?conn:conn_t -> int -> multi_t list -> (address_t * hexspk_t) monad_t
 	(** Creates a m-of-n multi-signature address.  An invocation of [createmultisig num pubs] where [List.length pubs >= num]
 	    returns an address that requires the private keys of at least [num] members of [pubs] for spending. *)
+
+	val estimatefee: ?conn:conn_t -> int -> amount_t monad_t
+	(** Estimates the transaction fee (per kilobyte) that needs to be paid for a transaction to be included within
+	    the given number of blocks. *)
+
+	val estimatepriority: ?conn:conn_t -> int -> float option monad_t
+	(** Estimates the priority that a transaction needs to have in order to be included within the given number of
+	    blocks without paying a transaction fee.  A return value of [None] indicates that the node does not have
+	    enough information to make an estimate. *)
 
 	val validateaddress: ?conn:conn_t -> address_t -> assoc_t option monad_t
 	(** Is the given address a valid Bitcoin address?  If so, this function returns an object
@@ -276,6 +293,11 @@ sig
 	(************************************************************************)
 	(**	{2 Wallet}							*)
 	(************************************************************************)
+
+	val addmultisigaddress: ?conn:conn_t -> ?account:account_t -> int -> multi_t list -> address_t monad_t
+	(** Add a {i n-required-to-sign} multisignature address to the wallet, optionally associated with [account].
+	    The value of {i n} is an integer given by the first mandatory parameter.  Each address may be provided
+	    either as a {!address_t}, or as a hex-encoded public key ({!hexspk_t}). *)
 
 	val backupwallet: ?conn:conn_t -> string -> unit monad_t
 	(** Safely backs up wallet file to the given destination, which can be either a directory or a path with filename. *)
@@ -328,6 +350,13 @@ sig
 
 	val getunconfirmedbalance: ?conn:conn_t -> unit -> amount_t monad_t
 	(** Returns the total unconfirmed balance. *)
+
+	val getwalletinfo: ?conn:conn_t -> unit -> assoc_t monad_t
+	(** Returns miscelaneous information about the wallet. *)
+
+	val importaddress: ?conn:conn_t -> ?account:account_t -> ?rescan:bool -> multi_t -> unit monad_t
+	(** Adds an address or pubkey script to the wallet without the associated private key, allowing watching
+	    for transactions affecting that address or pubkey script, but without being able to spend any of its outputs. *)
 
 	val importprivkey: ?conn:conn_t -> ?account:account_t -> ?rescan:bool-> priv_t -> unit monad_t
 	(** Adds a private key to the wallet.  This can be an externally generated key or one previously
