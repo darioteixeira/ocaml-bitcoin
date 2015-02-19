@@ -1,6 +1,6 @@
 (********************************************************************************)
 (*	Bitcoin.ml
-	Copyright (c) 2012 Dario Teixeira (dario.teixeira@yahoo.com)
+	Copyright (c) 2012-2015 Dario Teixeira <dario.teixeira@nleyten.com>
 *)
 (********************************************************************************)
 

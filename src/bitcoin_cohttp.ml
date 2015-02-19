@@ -1,6 +1,6 @@
 (********************************************************************************)
 (*	Bitcoin_cohttp.ml
-	Copyright (c) 2013 Vincent Bernardoff (vb@luminar.eu.org)
+	Copyright (c) 2013 Vincent Bernardoff <vb@luminar.eu.org>
 *)
 (********************************************************************************)
 
@@ -16,12 +16,17 @@ exception No_response
 
 
 (********************************************************************************)
-(**	{1 Public modules}							*)
+(**	{1 Private modules}							*)
 (********************************************************************************)
 
 module C = Cohttp
 module CU = Cohttp_lwt_unix
 module CB = Cohttp_lwt_body
+
+
+(********************************************************************************)
+(**	{1 Public modules}							*)
+(********************************************************************************)
 
 module Httpclient: Bitcoin.HTTPCLIENT with type 'a Monad.t = 'a Lwt.t =
 struct

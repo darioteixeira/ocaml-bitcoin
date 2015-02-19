@@ -1,16 +1,16 @@
 (********************************************************************************)
-(*Bitcoin_ocurl.ml
-  Copyright (c) 2013 Vincent Bernardoff (vb@luminar.eu.org)
+(*	Bitcoin_ocurl.ml
+	Copyright (c) 2013 Vincent Bernardoff <vb@luminar.eu.org>
 *)
 (********************************************************************************)
 
-(**Offers an implementation of a {!Bitcoin.HTTPCLIENT} using OCurl's
-   [Http_client].
+(**	Offers an implementation of a {!Bitcoin.HTTPCLIENT} using OCurl's
+	[Http_client].
 *)
 
 
 (********************************************************************************)
-(** {1 Public modules}                                                          *)
+(**	{1 Public modules}							*)
 (********************************************************************************)
 
 module Httpclient: Bitcoin.HTTPCLIENT with type 'a Monad.t = 'a =
