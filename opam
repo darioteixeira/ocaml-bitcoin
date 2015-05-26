@@ -1,10 +1,10 @@
 opam-version: "1.2"
 name: "bitcoin"
-version: "1.1.1"
+version: "2.0"
 maintainer: "dario.teixeira@nleyten.com"
 authors: ["Dario Teixeira <dario.teixeira@nleyten.com>"]
 homepage: "http://ocaml-bitcoin.forge.ocamlcore.org/"
-license: "GPL-2.0"
+license: "LGPL-2.1 with OCaml linking exception"
 
 build: [
   ["./configure" "--prefix" prefix
@@ -36,3 +36,4 @@ depopts: [
 conflicts: [
   "ocamlnet" {< "4.0.0"}
 ]
+
