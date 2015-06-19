@@ -1,9 +1,11 @@
 opam-version: "1.2"
 name: "bitcoin"
 version: "2.0"
-maintainer: "dario.teixeira@nleyten.com"
+maintainer: "Dario Teixeira <dario.teixeira@nleyten.com>"
 authors: ["Dario Teixeira <dario.teixeira@nleyten.com>"]
-homepage: "http://ocaml-bitcoin.forge.ocamlcore.org/"
+homepage: "https://ocaml-bitcoin.forge.ocamlcore.org/"
+bug-reports: "https://github.com/darioteixeira/ocaml-bitcoin/issues"
+dev-repo: "https://github.com/darioteixeira/ocaml-bitcoin.git"
 license: "LGPL-2.1 with OCaml linking exception"
 
 build: [
