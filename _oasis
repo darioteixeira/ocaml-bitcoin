@@ -1,88 +1,88 @@
-OASISFormat:		0.3
-Name:			OCaml-bitcoin
-Version:		2.0
-Synopsis:		Library offering an OCaml interface to the official Bitcoin client API
-Authors:		Dario Teixeira
-License:		LGPL-2.1 with OCaml linking exception
-LicenseFile:		LICENSE
-BuildTools:		ocamlbuild, ocamldoc
-Plugins:		META (0.3), DevFiles (0.3)
+OASISFormat:    0.3
+Name:           OCaml-bitcoin
+Version:        2.0
+Synopsis:       Library offering an OCaml interface to the official Bitcoin client API
+Authors:        Dario Teixeira
+License:        LGPL-2.1 with OCaml linking exception
+LicenseFile:    LICENSE
+BuildTools:     ocamlbuild, ocamldoc
+Plugins:        META (0.3), DevFiles (0.3)
 
 Flag "ocsigen"
-  Description:		Build auxiliary library "bitcoin_ocsigen" (implements an HTTP client using Ocsigenserver's Ocsigen_http_client)
-  Default:		false
+    Description:    Build auxiliary library "bitcoin_ocsigen" (implements an HTTP client using Ocsigenserver's Ocsigen_http_client)
+    Default:        false
 
 Flag "ocamlnet"
-  Description:		Build auxiliary library "bitcoin_ocamlnet" (implements an HTTP client using Ocamlnet's Netclient)
-  Default:		false
+    Description:    Build auxiliary library "bitcoin_ocamlnet" (implements an HTTP client using Ocamlnet's Netclient)
+    Default:        false
 
 Flag "cohttp"
-  Description:          Build auxiliary library "bitcoin_cohttp" (implements an HTTP client using Cohttp's Cohttp_lwt_unix.Client)
-  Default:              false
+    Description:    Build auxiliary library "bitcoin_cohttp" (implements an HTTP client using Cohttp's Cohttp_lwt_unix.Client)
+    Default:        false
 
 Flag "ocurl"
-  Description:          Build auxiliary library "bitcoin_ocurl" (implements an HTTP client using OCurl)
-  Default:              false
+    Description:    Build auxiliary library "bitcoin_ocurl" (implements an HTTP client using OCurl)
+    Default:        false
 
 Library "bitcoin"
-  Path:			src
-  Modules:		Bitcoin
-  BuildDepends:		cryptokit, yojson
+    Path:                   src
+    Modules:                Bitcoin
+    BuildDepends:           cryptokit, yojson
 
 Library "bitcoin_ocsigen"
-  Build$:		flag(ocsigen)
-  Install$:		flag(ocsigen)
-  Path:			src
-  Modules:		Bitcoin_ocsigen
-  BuildDepends:		threads, lwt, ocsigenserver, bitcoin
-  FindlibParent:	bitcoin
-  FindlibName:		ocsigen
+    Build$:                 flag(ocsigen)
+    Install$:               flag(ocsigen)
+    Path:                   src
+    Modules:                Bitcoin_ocsigen
+    BuildDepends:           threads, lwt, ocsigenserver, bitcoin
+    FindlibParent:          bitcoin
+    FindlibName:            ocsigen
 
 Library "bitcoin_ocamlnet"
-  Build$:		flag(ocamlnet)
-  Install$:		flag(ocamlnet)
-  Path:			src
-  Modules:		Bitcoin_ocamlnet
-  BuildDepends:		netclient, bitcoin
-  FindlibParent:	bitcoin
-  FindlibName:		ocamlnet
+    Build$:                 flag(ocamlnet)
+    Install$:               flag(ocamlnet)
+    Path:                   src
+    Modules:                Bitcoin_ocamlnet
+    BuildDepends:           netclient, bitcoin
+    FindlibParent:          bitcoin
+    FindlibName:            ocamlnet
 
 Library "bitcoin_cohttp"
-  Build$:               flag(cohttp)
-  Install$:             flag(cohttp)
-  Path:                 src
-  Modules:              Bitcoin_cohttp
-  BuildDepends:         cohttp.lwt, bitcoin
-  FindlibParent:        bitcoin
-  FindlibName:          cohttp
+    Build$:                 flag(cohttp)
+    Install$:               flag(cohttp)
+    Path:                   src
+    Modules:                Bitcoin_cohttp
+    BuildDepends:           cohttp.lwt, bitcoin
+    FindlibParent:          bitcoin
+    FindlibName:            cohttp
 
 Library "bitcoin_ocurl"
-  Build$:               flag(ocurl)
-  Install$:             flag(ocurl)
-  Path:                 src
-  Modules:              Bitcoin_ocurl
-  BuildDepends:         curl, bitcoin
-  FindlibParent:        bitcoin
-  FindlibName:          ocurl
+    Build$:                 flag(ocurl)
+    Install$:               flag(ocurl)
+    Path:                   src
+    Modules:                Bitcoin_ocurl
+    BuildDepends:           curl, bitcoin
+    FindlibParent:          bitcoin
+    FindlibName:            ocurl
 
 Document "bitcoin-api"
-  Title:		API reference for OCaml-bitcoin
-  Type:			ocamlbuild (0.3)
-  Install:		true
-  InstallDir:		$htmldir
-  BuildTools:		ocamldoc
-  XOCamlbuildPath:	src
-  XOCamlbuildLibraries:	bitcoin
+    Title:                  API reference for OCaml-bitcoin
+    Type:                   ocamlbuild (0.3)
+    Install:                true
+    InstallDir:             $htmldir
+    BuildTools:             ocamldoc
+    XOCamlbuildPath:        src
+    XOCamlbuildLibraries:   bitcoin
 
 Executable test
-  Build$:		flag(tests) && flag(ocamlnet)
-  Path:			test
-  MainIs:		test.ml
-  Install:		false
-  BuildDepends:		oUnit (>= 1.1.0), bitcoin.ocamlnet
-  CompiledObject:	best
+    Build$:                 flag(tests) && flag(ocamlnet)
+    Path:                   test
+    MainIs:                 test.ml
+    Install:                false
+    BuildDepends:           oUnit (>= 1.1.0), bitcoin.ocamlnet
+    CompiledObject:         best
 
 Test main
-  Run$:			flag(tests) && flag(ocamlnet)
-  Command:		$test
+    Run$:                   flag(tests) && flag(ocamlnet)
+    Command:                $test
 
