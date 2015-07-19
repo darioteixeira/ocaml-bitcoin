@@ -1,7 +1,7 @@
 Version 2.0 (2015-07-19)
 ==========================
 
-  * Port to Bitcoin Core 0.9.0 API.
+  * Port to Bitcoin Core 0.10.0 API.
   * Functions grouped according to their categorisation (as defined by Bitcoin Core).
   * New engines based on OCurl and Cohttp, contributed by Vincent Bernardoff.
   * Change of license to LGPL-2.1 (with OCaml linking exception).
