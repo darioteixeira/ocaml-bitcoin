@@ -7,7 +7,6 @@ homepage: "http://ocaml-bitcoin.forge.ocamlcore.org/"
 bug-reports: "https://github.com/darioteixeira/ocaml-bitcoin/issues"
 dev-repo: "https://github.com/darioteixeira/ocaml-bitcoin.git"
 license: "LGPL-2.1 with OCaml linking exception"
-
 build: [
   ["./configure" "--prefix" prefix
                  "--docdir" "%{doc}%/bitcoin"
@@ -20,22 +19,15 @@ build: [
   [make "doc"]
   [make "install"]
 ]
-
 remove: [["ocamlfind" "remove" "bitcoin"]]
-
 depends: [
   "yojson"
   "cryptokit"
 ]
-
 depopts: [
   "ocsigenserver"
   "ocamlnet"
   "cohttp"
   "ocurl"
 ]
-
-conflicts: [
-  "ocamlnet" {< "4.0.0"}
-]
-
+conflicts: ["ocamlnet" {< "4.0.0"}]
