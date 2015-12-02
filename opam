@@ -29,5 +29,6 @@ depopts: [
   "ocamlnet"
   "cohttp"
   "ocurl"
+  "ocamlbuild" {build}
 ]
 conflicts: ["ocamlnet" {< "4.0.0"}]
