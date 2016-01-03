@@ -155,7 +155,7 @@ sig
     val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
     val listlockunspent: ?conn:conn_t -> unit -> txoutput_t list monad_t
     val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (account_t * amount_t * int) list monad_t
-    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (address_t * account_t * amount_t * int * txid_t list) list monad_t
+    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (bool * address_t * account_t * amount_t * int * txid_t list) list monad_t
     val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> (assoc_t list * blkhash_t) monad_t
     val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> ?includewatchonly:bool -> unit -> assoc_t list monad_t
     val listunspent: ?conn:conn_t -> ?minconf:int -> ?maxconf:int -> ?addresses:address_t list -> unit -> assoc_t list monad_t
@@ -674,7 +674,9 @@ struct
     let listreceivedbyaddress ?conn ?(minconf = 1) ?(includeempty = false) ?(includewatchonly = false) () =
         let to_result = function
             | `Assoc [("address", v1); ("account", v2); ("amount", v3); ("confirmations", v4); ("txids", v5)] ->
-                (to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
+                (false, to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
+            | `Assoc [("involvesWatchonly", v0); ("address", v1); ("account", v2); ("amount", v3); ("confirmations", v4); ("txids", v5)] ->
+                (to_bool v0, to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
             | _ ->
                 assert false in
         invoke ?conn ~params:[of_int minconf; of_bool includeempty; of_bool includewatchonly] "listreceivedbyaddress" >|= to_list to_result
