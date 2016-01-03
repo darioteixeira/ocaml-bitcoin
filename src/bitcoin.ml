@@ -692,7 +692,7 @@ struct
     let listtransactions ?conn ?account ?(count = 10) ?(from = 0) ?(includewatchonly = false) () =
         invoke
           ?conn
-          ~params:[of_account_with_wildcard account; of_int count; of_int from]
+          ~params:[of_account_with_wildcard account; of_int count; of_int from; of_bool includewatchonly]
           "listtransactions"
         >|= to_list to_assoc
 
