@@ -325,7 +325,7 @@ sig
     val getaddressesbyaccount: ?conn:conn_t -> account_t -> address_t list monad_t
     (** Return all addresses associated with the given account. *)
 
-    val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> unit -> amount_t monad_t
+    val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> amount_t monad_t
     (** If [account] is provided, returns the balance available in that account.
         If not, returns the total balance of all accounts. *)
 
@@ -345,7 +345,7 @@ sig
     (** Returns the total amount received on this address.  Note that only receiving transactions are considered
         and therefore this function does not compute the balance currently associated with the address. *)
 
-    val gettransaction: ?conn:conn_t -> txid_t -> assoc_t monad_t
+    val gettransaction: ?conn:conn_t -> ?includewatchonly:bool -> txid_t -> assoc_t monad_t
     (** Returns an object containing various information about the given transaction. *)
 
     val getunconfirmedbalance: ?conn:conn_t -> unit -> amount_t monad_t
@@ -373,7 +373,7 @@ sig
     (** Refills the keypool.  The optional parameter [size] indicates the new size of the pool (default is 100).
         {b (Requires unlocked wallet)}. *)
 
-    val listaccounts: ?conn:conn_t -> ?minconf:int -> unit -> (account_t * amount_t) list monad_t
+    val listaccounts: ?conn:conn_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> (account_t * amount_t) list monad_t
     (** Returns a list of all accounts and associated balance. *)
 
     val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
@@ -384,25 +384,25 @@ sig
     (** Returns a list of temporarily unspendable transaction outputs.  These are outputs previously locked by a call
         of {!lockunspent}, and will not be spent by the system unless explicitly used in a raw transaction. *)
 
-    val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (account_t * amount_t * int) list monad_t
+    val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (account_t * amount_t * int) list monad_t
     (** Returns a list of the total amount received by each account.  Each returned list element is a tuple
         consisting of an account, the total amount received for that account, and the number of confirmations.
         Optional parameter [includeempty] indicates whether accounts with nothing received will be included
         in the returned list (defaults to [false]). *)
 
-    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (address_t * account_t * amount_t * int * txid_t list) list monad_t
+    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (address_t * account_t * amount_t * int * txid_t list) list monad_t
     (** Returns a list of the total amount received by each address.  Each returned list element is a tuple consisting
         of the address, the associated account, the total amount received for that address, the number of confirmations,
         and a list of transaction IDs.  Optional parameter [includeempty] indicates whether accounts with nothing received
         should be included in the returned list (defaults to [false]). *)
 
-    val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> unit -> (assoc_t list * blkhash_t) monad_t
+    val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> (assoc_t list * blkhash_t) monad_t
     (** Returns a pair consisting of a list of all transactions and the block hash of the latest block.
         If provided, the [blockhash] parameter limits the list of transactions to those occurring after
         (and not including) that block.  Note that if you want to provide a value for parameter [minconf],
         then you must also provide [blockhash]. *)
 
-    val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> unit -> assoc_t list monad_t
+    val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> ?includewatchonly:bool -> unit -> assoc_t list monad_t
     (** Returns up to [count] most recent transactions skipping the first [from] transactions for [account].
         If [account] is not provided, then all recent transactions from all accounts will be returned.
         Note that [count] and [from] default to 10 and 0, respectively. *)
