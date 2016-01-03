@@ -390,7 +390,7 @@ sig
         Optional parameter [includeempty] indicates whether accounts with nothing received will be included
         in the returned list (defaults to [false]). *)
 
-    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (address_t * account_t * amount_t * int * txid_t list) list monad_t
+    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (bool * address_t * account_t * amount_t * int * txid_t list) list monad_t
     (** Returns a list of the total amount received by each address.  Each returned list element is a tuple consisting
         of the address, the associated account, the total amount received for that address, the number of confirmations,
         and a list of transaction IDs.  Optional parameter [includeempty] indicates whether accounts with nothing received
