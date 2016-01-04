@@ -607,11 +607,7 @@ struct
         invoke ?conn ~params:[of_account account] "getaddressesbyaccount" >|= to_list to_string
 
     let getbalance ?conn ?account ?(minconf = 1) ?(includewatchonly = false) () =
-        invoke
-          ?conn
-          ~params:[of_account_with_wildcard account; of_int minconf; of_bool includewatchonly]
-          "getbalance"
-        >|= to_amount
+        invoke ?conn ~params:[of_account_with_wildcard account; of_int minconf; of_bool includewatchonly] "getbalance" >|= to_amount
 
     let getnewaddress ?conn ?(account = `Default) () =
         invoke ?conn ~params:[of_account account] "getnewaddress" >|= to_string
@@ -625,7 +621,7 @@ struct
     let getreceivedbyaddress ?conn ?(minconf = 1) address =
         invoke ?conn ~params:[of_string address; of_int minconf] "getreceivedbyaddress" >|= to_amount
 
-    let gettransaction ?conn ?(includewatchonly=false) txid =
+    let gettransaction ?conn ?(includewatchonly = false) txid =
         invoke ?conn ~params:[of_string txid; of_bool includewatchonly] "gettransaction" >|= to_assoc
 
     let getunconfirmedbalance ?conn () =
@@ -665,7 +661,7 @@ struct
             | _                                   -> assert false in
         invoke ?conn "listlockunspent" >|= to_list to_locked
 
-    let listreceivedbyaccount ?conn ?(minconf = 1) ?(includeempty = false) ?(includewatchonly=false) () =
+    let listreceivedbyaccount ?conn ?(minconf = 1) ?(includeempty = false) ?(includewatchonly = false) () =
         let to_result = function
             | `Assoc [("account", v1); ("amount", v2); ("confirmations", v3)] -> (to_account v1, to_amount v2, to_int v3)
             | _                                                               -> assert false in
@@ -685,18 +681,10 @@ struct
         let to_result = function
             | `Assoc [("transactions", v1); ("lastblock", v2)] -> (to_list to_assoc v1, to_string v2)
             | _                                                -> assert false in
-        invoke
-          ?conn
-          ~params:((params_of_2tuple "listsinceblock" of_string of_int (blockhash, minconf)) @ [of_bool includewatchonly])
-          "listsinceblock"
-        >|= to_result
+        invoke ?conn ~params:((params_of_2tuple "listsinceblock" of_string of_int (blockhash, minconf)) @ [of_bool includewatchonly]) "listsinceblock" >|= to_result
 
     let listtransactions ?conn ?account ?(count = 10) ?(from = 0) ?(includewatchonly = false) () =
-        invoke
-          ?conn
-          ~params:[of_account_with_wildcard account; of_int count; of_int from; of_bool includewatchonly]
-          "listtransactions"
-        >|= to_list to_assoc
+        invoke ?conn ~params:[of_account_with_wildcard account; of_int count; of_int from; of_bool includewatchonly] "listtransactions" >|= to_list to_assoc
 
     let listunspent ?conn ?(minconf = 1) ?(maxconf = 9_999_999) ?(addresses = []) () =
         invoke ?conn ~params:[of_int minconf; of_int maxconf; of_list of_string addresses] "listunspent" >|= to_list to_assoc
