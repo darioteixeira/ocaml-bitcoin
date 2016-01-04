@@ -139,25 +139,25 @@ sig
     val getaccount: ?conn:conn_t -> address_t -> account_t monad_t
     val getaccountaddress: ?conn:conn_t -> account_t -> address_t monad_t
     val getaddressesbyaccount: ?conn:conn_t -> account_t -> address_t list monad_t
-    val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> unit -> amount_t monad_t
+    val getbalance: ?conn:conn_t -> ?account:account_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> amount_t monad_t
     val getnewaddress: ?conn:conn_t -> ?account:account_t -> unit -> address_t monad_t
     val getrawchangeaddress: ?conn:conn_t -> unit -> address_t monad_t
     val getreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> account_t -> amount_t monad_t
     val getreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> address_t -> amount_t monad_t
-    val gettransaction: ?conn:conn_t -> txid_t -> assoc_t monad_t
+    val gettransaction: ?conn:conn_t -> ?includewatchonly:bool -> txid_t -> assoc_t monad_t
     val getunconfirmedbalance: ?conn:conn_t -> unit -> amount_t monad_t
     val getwalletinfo: ?conn:conn_t -> unit -> assoc_t monad_t
     val importaddress: ?conn:conn_t -> ?account:account_t -> ?rescan:bool -> multi_t -> unit monad_t
     val importprivkey: ?conn:conn_t -> ?account:account_t -> ?rescan:bool-> priv_t -> unit monad_t
     val importwallet: ?conn:conn_t -> string -> unit monad_t
     val keypoolrefill: ?conn:conn_t -> ?size:int -> unit -> unit monad_t
-    val listaccounts: ?conn:conn_t -> ?minconf:int -> unit -> (account_t * amount_t) list monad_t
+    val listaccounts: ?conn:conn_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> (account_t * amount_t) list monad_t
     val listaddressgroupings: ?conn:conn_t -> unit -> (address_t * amount_t * account_t) list list monad_t
     val listlockunspent: ?conn:conn_t -> unit -> txoutput_t list monad_t
-    val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (account_t * amount_t * int) list monad_t
-    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> unit -> (address_t * account_t * amount_t * int * txid_t list) list monad_t
-    val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> unit -> (assoc_t list * blkhash_t) monad_t
-    val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> unit -> assoc_t list monad_t
+    val listreceivedbyaccount: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (account_t * amount_t * int) list monad_t
+    val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (bool * address_t * account_t * amount_t * int * txid_t list) list monad_t
+    val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> (assoc_t list * blkhash_t) monad_t
+    val listtransactions: ?conn:conn_t -> ?account:account_t -> ?count:int -> ?from:int -> ?includewatchonly:bool -> unit -> assoc_t list monad_t
     val listunspent: ?conn:conn_t -> ?minconf:int -> ?maxconf:int -> ?addresses:address_t list -> unit -> assoc_t list monad_t
     val lockunspent: ?conn:conn_t -> ?outputs:txoutput_t list -> [ `Lock | `Unlock ] -> bool monad_t
     val move: ?conn:conn_t -> ?minconf:int -> ?comment:string -> account_t -> account_t -> amount_t -> bool monad_t
@@ -606,8 +606,12 @@ struct
     let getaddressesbyaccount ?conn account =
         invoke ?conn ~params:[of_account account] "getaddressesbyaccount" >|= to_list to_string
 
-    let getbalance ?conn ?account ?(minconf = 1) () =
-        invoke ?conn ~params:[of_account_with_wildcard account; of_int minconf] "getbalance" >|= to_amount
+    let getbalance ?conn ?account ?(minconf = 1) ?(includewatchonly = false) () =
+        invoke
+          ?conn
+          ~params:[of_account_with_wildcard account; of_int minconf; of_bool includewatchonly]
+          "getbalance"
+        >|= to_amount
 
     let getnewaddress ?conn ?(account = `Default) () =
         invoke ?conn ~params:[of_account account] "getnewaddress" >|= to_string
@@ -621,8 +625,8 @@ struct
     let getreceivedbyaddress ?conn ?(minconf = 1) address =
         invoke ?conn ~params:[of_string address; of_int minconf] "getreceivedbyaddress" >|= to_amount
 
-    let gettransaction ?conn txid =
-        invoke ?conn ~params:[of_string txid] "gettransaction" >|= to_assoc
+    let gettransaction ?conn ?(includewatchonly=false) txid =
+        invoke ?conn ~params:[of_string txid; of_bool includewatchonly] "gettransaction" >|= to_assoc
 
     let getunconfirmedbalance ?conn () =
         invoke ?conn "getunconfirmedbalance" >|= to_amount
@@ -642,11 +646,11 @@ struct
     let keypoolrefill ?conn ?(size = 100) () =
         invoke ?conn ~params:[of_int size] "keypoolrefill" >|= to_unit
 
-    let listaccounts ?conn ?(minconf = 1) () =
+    let listaccounts ?conn ?(minconf = 1) ?(includewatchonly = false) () =
         let to_result = function
             | `Assoc xs -> List.map (fun (k, v) -> ((account_of_string k), (to_amount v))) xs
             | _         -> assert false in
-        invoke ?conn ~params:[of_int minconf] "listaccounts" >|= to_result
+        invoke ?conn ~params:[of_int minconf; of_bool includewatchonly] "listaccounts" >|= to_result
 
     let listaddressgroupings ?conn () =
         let to_result = function
@@ -661,28 +665,38 @@ struct
             | _                                   -> assert false in
         invoke ?conn "listlockunspent" >|= to_list to_locked
 
-    let listreceivedbyaccount ?conn ?(minconf = 1) ?(includeempty = false) () =
+    let listreceivedbyaccount ?conn ?(minconf = 1) ?(includeempty = false) ?(includewatchonly=false) () =
         let to_result = function
             | `Assoc [("account", v1); ("amount", v2); ("confirmations", v3)] -> (to_account v1, to_amount v2, to_int v3)
             | _                                                               -> assert false in
-        invoke ?conn ~params:[of_int minconf; of_bool includeempty] "listreceivedbyaccount" >|= to_list to_result
+        invoke ?conn ~params:[of_int minconf; of_bool includeempty; of_bool includewatchonly] "listreceivedbyaccount" >|= to_list to_result
 
-    let listreceivedbyaddress ?conn ?(minconf = 1) ?(includeempty = false) () =
+    let listreceivedbyaddress ?conn ?(minconf = 1) ?(includeempty = false) ?(includewatchonly = false) () =
         let to_result = function
             | `Assoc [("address", v1); ("account", v2); ("amount", v3); ("confirmations", v4); ("txids", v5)] ->
-                (to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
+                (false, to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
+            | `Assoc [("involvesWatchonly", v0); ("address", v1); ("account", v2); ("amount", v3); ("confirmations", v4); ("txids", v5)] ->
+                (to_bool v0, to_string v1, to_account v2, to_amount v3, to_int v4, to_list to_string v5)
             | _ ->
                 assert false in
-        invoke ?conn ~params:[of_int minconf; of_bool includeempty] "listreceivedbyaddress" >|= to_list to_result
+        invoke ?conn ~params:[of_int minconf; of_bool includeempty; of_bool includewatchonly] "listreceivedbyaddress" >|= to_list to_result
 
-    let listsinceblock ?conn ?blockhash ?minconf () =
+    let listsinceblock ?conn ?blockhash ?minconf ?(includewatchonly = false) () =
         let to_result = function
             | `Assoc [("transactions", v1); ("lastblock", v2)] -> (to_list to_assoc v1, to_string v2)
             | _                                                -> assert false in
-        invoke ?conn ~params:(params_of_2tuple "listsinceblock" of_string of_int (blockhash, minconf)) "listsinceblock" >|= to_result
+        invoke
+          ?conn
+          ~params:((params_of_2tuple "listsinceblock" of_string of_int (blockhash, minconf)) @ [of_bool includewatchonly])
+          "listsinceblock"
+        >|= to_result
 
-    let listtransactions ?conn ?account ?(count = 10) ?(from = 0) () =
-        invoke ?conn ~params:[of_account_with_wildcard account; of_int count; of_int from] "listtransactions" >|= to_list to_assoc
+    let listtransactions ?conn ?account ?(count = 10) ?(from = 0) ?(includewatchonly = false) () =
+        invoke
+          ?conn
+          ~params:[of_account_with_wildcard account; of_int count; of_int from; of_bool includewatchonly]
+          "listtransactions"
+        >|= to_list to_assoc
 
     let listunspent ?conn ?(minconf = 1) ?(maxconf = 9_999_999) ?(addresses = []) () =
         invoke ?conn ~params:[of_int minconf; of_int maxconf; of_list of_string addresses] "listunspent" >|= to_list to_assoc
