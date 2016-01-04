@@ -391,10 +391,11 @@ sig
         in the returned list (defaults to [false]). *)
 
     val listreceivedbyaddress: ?conn:conn_t -> ?minconf:int -> ?includeempty:bool -> ?includewatchonly:bool -> unit -> (bool * address_t * account_t * amount_t * int * txid_t list) list monad_t
-    (** Returns a list of the total amount received by each address.  Each returned list element is a tuple consisting
-        of the address, the associated account, the total amount received for that address, the number of confirmations,
-        and a list of transaction IDs.  Optional parameter [includeempty] indicates whether accounts with nothing received
-        should be included in the returned list (defaults to [false]). *)
+    (** Returns a list of the total amount received by each address.  Each returned list element is a tuple
+        consisting of a boolean indicating whether the address is watch only, the address itself, the associated
+        account, the total amount received for that address, the number of confirmations, and a list of transaction
+        IDs.  Optional parameter [includeempty] indicates whether accounts with nothing received should be included
+        in the returned list (defaults to [false]). *)
 
     val listsinceblock: ?conn:conn_t -> ?blockhash:blkhash_t -> ?minconf:int -> ?includewatchonly:bool -> unit -> (assoc_t list * blkhash_t) monad_t
     (** Returns a pair consisting of a list of all transactions and the block hash of the latest block.
