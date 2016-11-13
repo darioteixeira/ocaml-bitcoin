@@ -4,5 +4,4 @@ info.byte: info.ml
 	ocamlfind ocamlc -package unix,bitcoin,bitcoin.ocamlnet -linkpkg -o $@ $<
 
 clean:
-	rm -f *.cm[io] *.byte
-
+	rm -f *.cm[iot] *.byte
