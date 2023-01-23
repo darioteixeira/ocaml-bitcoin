@@ -24,7 +24,8 @@ module CB = Cohttp_async.Body
 (** {1 Public modules}                                                          *)
 (********************************************************************************)
 
-module Httpclient : Bitcoin.HTTPCLIENT with type 'a Monad.t = ('a, exn) Result.t Deferred.t = struct
+module Httpclient :
+  Bitcoin.HTTPCLIENT with type 'a Monad.t = ('a, exn) Result.t Deferred.t = struct
   (* Unlike Lwt promises, Async promises don't attach errors to it.  So,
      we wrap Async promises around a Result.t to satisfy the interface. *)
   module Monad = struct
@@ -53,7 +54,12 @@ module Httpclient : Bitcoin.HTTPCLIENT with type 'a Monad.t = ('a, exn) Result.t
     let headers = C.Header.of_list (("connection", "close") :: headers) in
     let uri = Uri.make ~scheme:"http" ~host ~port ~path:uri () in
     Monitor.try_with (fun () ->
-        Cohttp_async.Client.call ~chunked:false ~headers ~body:(CB.of_string request) `POST uri)
+        Cohttp_async.Client.call
+          ~chunked:false
+          ~headers
+          ~body:(CB.of_string request)
+          `POST
+          uri)
     >>= fun res ->
     match res with
     | Error exn -> Monad.fail exn
