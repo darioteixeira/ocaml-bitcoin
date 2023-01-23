@@ -1,0 +1,4 @@
+(library
+ (name bitcoin_cohttp_lwt)
+ (public_name bitcoin-cohttp-lwt)
+ (libraries bitcoin cohttp-lwt cohttp-lwt-unix))

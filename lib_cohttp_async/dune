@@ -1,0 +1,4 @@
+(library
+ (name bitcoin_cohttp_async)
+ (public_name bitcoin-cohttp-async)
+ (libraries bitcoin cohttp-async))

@@ -1,3 +1,10 @@
+Version 3.0 (2021-12-24)
+========================
+  * Port to dune
+  * Separate each I/O interface into distinct opam packages
+  * Add cohttp-async
+  * Run ocamlformat
+
 Version 2.0 (2015-07-19)
 ==========================
 
@@ -5,7 +12,6 @@ Version 2.0 (2015-07-19)
   * Functions grouped according to their categorisation (as defined by Bitcoin Core).
   * New engines based on OCurl and Cohttp, contributed by Vincent Bernardoff.
   * Change of license to LGPL-2.1 (with OCaml linking exception).
-
 
 Version 1.1.1 (2013-05-23)
 ==========================
@@ -24,4 +30,3 @@ Version 1.0 (2012-10-24)
 ========================
 
   * First public release.
-
