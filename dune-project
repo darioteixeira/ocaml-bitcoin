@@ -37,10 +37,9 @@
  (description "This is the cohttp-async I/O interface to the bitcoin client")
  (depends bitcoin cohttp-async))
 
-; XXX: Can't find ocamlnet even though it's installed. What?
-;(package
-; (name bitcoin-ocamlnet)
-; (synopsis "Bitcoin Client API ocamlnet interface")
-; (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
-; (description "The ocamlnet I/O interface to the bitcoin client")
-; (depends bitcoin ocamlnet))
+(package
+ (name bitcoin-ocamlnet)
+ (synopsis "Bitcoin Client API ocamlnet interface")
+ (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
+ (description "The ocamlnet I/O interface to the bitcoin client")
+ (depends bitcoin ocamlnet))
