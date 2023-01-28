@@ -3,7 +3,6 @@
     Copyright (c) 2012 Dario Teixeira <dario.teixeira@nleyten.com>
 *)
 (********************************************************************************)
-
 open OUnit
 open Bitcoin
 
@@ -48,7 +47,13 @@ let random_account () =
   let num = Random.int64 Int64.max_int in
   `Named (Printf.sprintf "ocaml-bitcoin-test-%016Lx" num)
 
-let () =
+let init () =
+  Testnet.getblockchaininfo ()
+  >>= fun lst ->
+  List.iter lst ~f:(fun (name, _data) ->
+      printf "getblockchaininfo: %s" name);
+  return ()
+(*
   global
     := match List.assoc "testnet" (Testnet.getinfo ()) with
        | `Bool false ->
@@ -68,6 +73,7 @@ let () =
              address3 = Testnet.getaccountaddress account3
            }
        | _ -> assert false
+       *)
 
 (********************************************************************************)
 (** {1 Test functions}                                                          *)
@@ -261,38 +267,38 @@ let ( !! ) test =
 let suite =
   "OCaml-bitcoin"
   >::: [ (* Overall control/query calls *)
-         "getinfo" >:: !!test_getinfo;
-         (* P2P networking *)
-         "addnode" >:: !!test_addnode;
-         "getconnectioncount" >:: !!test_getconnectioncount;
-         (* Block chain and UTXO *)
-         "getblock" >:: !!test_getblock;
-         "getblockcount" >:: !!test_getblockcount;
-         "getdifficulty" >:: !!test_getdifficulty;
-         (* Mining *)
-         "getgenerate" >:: !!test_getgenerate;
-         "gethashespersec" >:: !!test_gethashespersec;
-         (* Utility functions *)
-         "validateaddress" >:: !!test_validateaddress;
-         (* Wallet *)
-         "backupwallet" >:: !!test_backupwallet;
-         "dumpprivkey" >:: !!test_dumpprivkey;
-         "getaccount" >:: !!test_getaccount;
-         "getaccountaddress" >:: !!test_getaccountaddress;
-         "getaddressesbyaccount" >:: !!test_getaddressesbyaccount;
-         "getbalance" >:: !!test_getbalance;
-         "getreceivedbyaccount" >:: !!test_getreceivedbyaccount;
-         "getreceivedbyaddress" >:: !!test_getreceivedbyaddress;
-         "listaccounts" >:: !!test_listaccounts;
-         "listaddressgroupings" >:: !!test_listaddressgroupings;
-         "listreceivedbyaccount" >:: !!test_listreceivedbyaccount;
-         "listunspent" >:: !!test_listunspent;
-         "move" >:: !!test_move;
-         "sendfrom" >:: !!test_sendfrom;
-         "sendmany" >:: !!test_sendmany;
-         "sendtoaddress" >:: !!test_sendtoaddress;
-         "setaccount" >:: !!test_setaccount;
-         "settxfee" >:: !!test_settxfee
-       ]
+    "getinfo" >:: !!test_getinfo;
+    (* P2P networking *)
+    "addnode" >:: !!test_addnode;
+    "getconnectioncount" >:: !!test_getconnectioncount;
+    (* Block chain and UTXO *)
+    "getblock" >:: !!test_getblock;
+    "getblockcount" >:: !!test_getblockcount;
+    "getdifficulty" >:: !!test_getdifficulty;
+    (* Mining *)
+    "getgenerate" >:: !!test_getgenerate;
+    "gethashespersec" >:: !!test_gethashespersec;
+    (* Utility functions *)
+    "validateaddress" >:: !!test_validateaddress;
+    (* Wallet *)
+    "backupwallet" >:: !!test_backupwallet;
+    "dumpprivkey" >:: !!test_dumpprivkey;
+    "getaccount" >:: !!test_getaccount;
+    "getaccountaddress" >:: !!test_getaccountaddress;
+    "getaddressesbyaccount" >:: !!test_getaddressesbyaccount;
+    "getbalance" >:: !!test_getbalance;
+    "getreceivedbyaccount" >:: !!test_getreceivedbyaccount;
+    "getreceivedbyaddress" >:: !!test_getreceivedbyaddress;
+    "listaccounts" >:: !!test_listaccounts;
+    "listaddressgroupings" >:: !!test_listaddressgroupings;
+    "listreceivedbyaccount" >:: !!test_listreceivedbyaccount;
+    "listunspent" >:: !!test_listunspent;
+    "move" >:: !!test_move;
+    "sendfrom" >:: !!test_sendfrom;
+    "sendmany" >:: !!test_sendmany;
+    "sendtoaddress" >:: !!test_sendtoaddress;
+    "setaccount" >:: !!test_setaccount;
+    "settxfee" >:: !!test_settxfee
+  ]
 
 let _ = run_test_tt_main suite
