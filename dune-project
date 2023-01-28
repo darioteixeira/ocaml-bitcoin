@@ -50,3 +50,11 @@
  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
  (description "The ocurl I/O interface to the bitcoin client")
  (depends bitcoin ocurl))
+
+;; XXX: not familiar enough with ocsigen to get this to build -- mbacarella
+;(package
+; (name bitcoin-ocsigen)
+; (synopsis "Bitcoin Client API ocsigen interface")
+; (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
+; (description "The ocsigen I/O interface to the bitcoin client")
+; (depends bitcoin ocsigen-start))
