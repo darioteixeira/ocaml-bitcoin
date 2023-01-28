@@ -25,7 +25,7 @@ module Httpclient : Bitcoin.HTTPCLIENT with type 'a Monad.t = 'a = struct
       | exc -> f exc
   end
 
-  let post_string ~headers ~inet_addr ~host ~port ~uri request =
+  let post_string ~headers ~inet_addr ~host:_ ~port ~uri request =
     let dst = "http://" ^ Unix.string_of_inet_addr inet_addr ^ ":" ^ string_of_int port ^ uri in
     let pipeline = new Nethttp_client.pipeline in
     let request = new Nethttp_client.post_raw dst request in

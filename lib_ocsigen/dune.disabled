@@ -1,0 +1,6 @@
+(library
+ (name bitcoin_ocsigen)
+ (public_name bitcoin-ocsigen)
+ (libraries bitcoin ocsigen-start)
+ (preprocess
+  (pps lwt_ppx)))

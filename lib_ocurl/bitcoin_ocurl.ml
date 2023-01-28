@@ -27,7 +27,7 @@ module Httpclient : Bitcoin.HTTPCLIENT with type 'a Monad.t = 'a = struct
 
   let buf = Buffer.create 100
 
-  let post_string ~headers ~inet_addr ~host ~port ~uri request =
+  let post_string ~headers ~inet_addr:_ ~host ~port ~uri request =
     let open Curl in
     let h = new handle in
     let dst = "http://" ^ host ^ ":" ^ string_of_int port ^ uri in
