@@ -43,3 +43,10 @@
  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
  (description "The ocamlnet I/O interface to the bitcoin client")
  (depends bitcoin ocamlnet))
+
+(package
+ (name bitcoin-ocurl)
+ (synopsis "Bitcoin Client API ocurl interface")
+ (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
+ (description "The ocurl I/O interface to the bitcoin client")
+ (depends bitcoin ocurl))
