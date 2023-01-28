@@ -319,9 +319,9 @@ module Make (Httpclient : HTTPCLIENT) (Connection : CONNECTION) :
 
   let invoke ?conn ?(params = []) methode =
     (match conn, Connection.default with
-    | Some conn, _ -> Monad.return conn
-    | None, Some conn -> Monad.return conn
-    | None, None -> Monad.fail Unspecified_connection)
+     | Some conn, _ -> Monad.return conn
+     | None, Some conn -> Monad.return conn
+     | None, None -> Monad.fail Unspecified_connection)
     >>= fun conn ->
     let headers =
       [ "content-type", "application/json";
@@ -344,20 +344,20 @@ module Make (Httpclient : HTTPCLIENT) (Connection : CONNECTION) :
           ~uri:"/"
           xrequest)
       (function
-        | exc -> Monad.fail (Httpclient_error exc))
+       | exc -> Monad.fail (Httpclient_error exc))
     >>= fun xresponse ->
     match Yojson.Safe.from_string xresponse with
     | `Assoc [ ("result", result); ("error", error); ("id", _) ] ->
       (match result, error with
-      | x, `Null -> Monad.return x
-      | `Null, `Assoc [ ("code", `Int code); ("message", `String message) ] ->
-        let exc =
-          if code <= -3 && code >= -17
-          then Bitcoin_error (code, message)
-          else Internal_error (code, message)
-        in
-        Monad.fail exc
-      | _, _ -> assert false)
+       | x, `Null -> Monad.return x
+       | `Null, `Assoc [ ("code", `Int code); ("message", `String message) ] ->
+         let exc =
+           if code <= -3 && code >= -17
+           then Bitcoin_error (code, message)
+           else Internal_error (code, message)
+         in
+         Monad.fail exc
+       | _, _ -> assert false)
     | _ -> assert false
 
   (****************************************************************************)

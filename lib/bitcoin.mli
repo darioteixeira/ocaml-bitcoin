@@ -15,9 +15,7 @@ exception Unspecified_connection
 (* Raised when connection parameter is not given and no default connection exists. *)
 
 exception Bitcoin_error of int * string (* Error reported by the Bitcoin client. *)
-
 exception Internal_error of int * string (* Unexpected response from the Bitcoin client *)
-
 exception Httpclient_error of exn (* Connection error reported by the {!HTTPCLIENT} *)
 
 (********************************************************************************)
@@ -37,21 +35,13 @@ type amount_t = int64
 (* Amount in BTC, represented as a multiple of Bitcoin's base unit (= 10 nanoBTC).*)
 
 type txid_t = string (* Transaction identifier *)
-
 type txoutput_t = txid_t * int (* Transaction output *)
-
 type blkhash_t = string (* Block hash *)
-
 type priv_t = string (* Private portion of public/private ECDSA keypair *)
-
 type sig_t = string (* Message signature *)
-
 type hextx_t = string (* Hex representation of raw transaction *)
-
 type hexspk_t = string (* Hex representation of script public key *)
-
 type hexblk_t = string (* Hex representation of block data *)
-
 type hexwork_t = string (* Hex representation of mining work data *)
 
 type multi_t =
@@ -61,7 +51,6 @@ type multi_t =
 (* Multi-signature addresses may take either format *)
 
 type node_t = string (* Node representation *)
-
 type assoc_t = (string * Yojson.Safe.t) list (* Association list *)
 
 type conn_t =

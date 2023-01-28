@@ -8,7 +8,7 @@ module Mainnet_connection = struct
         host = "my-ip";
         port = 8332;
         username = "my-username";
-        password = "my-password";
+        password = "my-password"
       }
 end
 
