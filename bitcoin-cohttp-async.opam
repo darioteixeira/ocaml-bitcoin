@@ -13,7 +13,7 @@ bug-reports: "https://github.com/darioteixeira/ocaml-bitcoin/issues"
 depends: [
   "dune" {>= "2.8"}
   "bitcoin"
-  "cohttp-async"
+  "cohttp-async" {>= "5.0.0"}
   "odoc" {with-doc}
 ]
 build: [

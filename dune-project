@@ -35,7 +35,10 @@
  (synopsis "Bitcoin Client API cohttp-async interface")
  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
  (description "This is the cohttp-async I/O interface to the bitcoin client")
- (depends bitcoin cohttp-async))
+ (depends
+  bitcoin
+  (cohttp-async
+   (>= 5.0.0))))
 
 (package
  (name bitcoin-ocamlnet)
