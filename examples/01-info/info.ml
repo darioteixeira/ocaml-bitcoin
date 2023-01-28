@@ -12,37 +12,32 @@
 
 open Bitcoin
 
-
 (********************************************************************************)
 (** {1 Inner modules}                                                           *)
 (********************************************************************************)
 
-module Testnet_connection =
-struct
-    let default = Some
-        {
-        inet_addr = Unix.inet_addr_loopback;
+module Testnet_connection = struct
+  let default =
+    Some
+      { inet_addr = Unix.inet_addr_loopback;
         host = "localhost";
         port = 18332;
         username = "user";
-        password = "password";
-        }
+        password = "password"
+      }
 end
 
-
 module Testnet = Bitcoin.Make (Bitcoin_ocamlnet.Httpclient) (Testnet_connection)
-
 
 (********************************************************************************)
 (** {1 Functions and values}                                                    *)
 (********************************************************************************)
 
 let () =
-    let blockcount = Testnet.getblockcount () in
-    let difficulty = Testnet.getdifficulty () in
-    let networkhashps = Testnet.getnetworkhashps () in
-    Printf.printf "Information about the Testnet:\n";
-    Printf.printf "\tBlock count: %d\n" blockcount;
-    Printf.printf "\tDifficulty: %f\n" difficulty;
-    Printf.printf "\tNetwork hashes per second (estimated): %d\n" networkhashps
-
+  let blockcount = Testnet.getblockcount () in
+  let difficulty = Testnet.getdifficulty () in
+  let networkhashps = Testnet.getnetworkhashps () in
+  Printf.printf "Information about the Testnet:\n";
+  Printf.printf "\tBlock count: %d\n" blockcount;
+  Printf.printf "\tDifficulty: %f\n" difficulty;
+  Printf.printf "\tNetwork hashes per second (estimated): %d\n" networkhashps

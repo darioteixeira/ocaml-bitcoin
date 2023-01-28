@@ -1,0 +1,8 @@
+; This is simply the functorialized Bitcoin client
+; You need to install one of bitcoin-cohttp, bitcoin-ocurl, or bitcoin-ocamlnet
+; to perform actual I/O.
+
+(library
+ (name bitcoin)
+ (public_name bitcoin)
+ (libraries cryptokit yojson))

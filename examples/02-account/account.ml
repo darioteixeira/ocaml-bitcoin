@@ -13,48 +13,44 @@
 open Lwt
 open Bitcoin
 
-
 (********************************************************************************)
 (** {1 Inner modules}                                                           *)
 (********************************************************************************)
 
-module Testnet_connection =
-struct
-    let default = Some
-        {
-        inet_addr = Unix.inet_addr_loopback;
+module Testnet_connection = struct
+  let default =
+    Some
+      { inet_addr = Unix.inet_addr_loopback;
         host = "localhost";
         port = 18332;
         username = "user";
-        password = "password";
-        }
+        password = "password"
+      }
 end
 
-
 module Testnet = Bitcoin.Make (Bitcoin_cohttp.Httpclient) (Testnet_connection)
-
 
 (********************************************************************************)
 (** {1 Functions and values}                                                    *)
 (********************************************************************************)
 
 let print_accounts () =
-    let printer (account, amount) =
-        let account' = match account with
-            | `Default -> "Default account"
-            | `Named s -> Printf.sprintf "Account '%s'" s in
-        Lwt_io.printf "%s has a balance of %Ld satoshi.\n" account' amount in
-    Testnet.listaccounts () >>= fun xs ->
-    Lwt_list.iter_s printer xs
+  let printer (account, amount) =
+    let account' =
+      match account with
+      | `Default -> "Default account"
+      | `Named s -> Printf.sprintf "Account '%s'" s
+    in
+    Lwt_io.printf "%s has a balance of %Ld satoshi.\n" account' amount
+  in
+  Testnet.listaccounts () >>= fun xs -> Lwt_list.iter_s printer xs
 
 let print_balance () =
-    Testnet.getbalance () >>= fun balance ->
-    Lwt_io.printf "Total balance is %Ld satoshi (= %f BTC)\n" balance (Bitcoin.float_of_amount balance)
+  Testnet.getbalance ()
+  >>= fun balance ->
+  Lwt_io.printf
+    "Total balance is %Ld satoshi (= %f BTC)\n"
+    balance
+    (Bitcoin.float_of_amount balance)
 
-let () =
-    Lwt_main.run
-    begin
-        print_accounts () >>
-        print_balance ()
-    end
-
+let () = Lwt_main.run (print_accounts () >> print_balance ())
