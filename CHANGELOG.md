@@ -4,6 +4,8 @@ unreleased to opam
 * Separate each I/O interface into distinct opam packages
 * Add cohttp-async
 * Run ocamlformat
+* Extend getblock to support verbosity > 1
+* Extend gettxout to handle Null replies
 
 Version 2.0 (2015-07-19)
 ==========================
