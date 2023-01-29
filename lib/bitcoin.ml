@@ -98,7 +98,7 @@ module type ENGINE = sig
   val getmempoolinfo : ?conn:conn_t -> unit -> assoc_t monad_t
   val getrawmempool : ?conn:conn_t -> unit -> txid_t list monad_t
   val getrawmempool_verbose : ?conn:conn_t -> unit -> assoc_t monad_t
-  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t monad_t
+  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t option monad_t
   val gettxoutsetinfo : ?conn:conn_t -> unit -> assoc_t monad_t
   val verifychain : ?conn:conn_t -> ?checklevel:int -> ?numblocks:int -> unit -> bool monad_t
   val stop : ?conn:conn_t -> unit -> unit monad_t
@@ -491,7 +491,13 @@ module Make (Httpclient : HTTPCLIENT) (Connection : CONNECTION) :
 
   let gettxout ?conn ?(includemempool = true) (txid, num) =
     invoke ?conn ~params:[ of_string txid; of_int num; of_bool includemempool ] "gettxout"
-    >|= to_assoc
+    >|= fun js ->
+    match js with
+    | `Assoc ks -> Some ks
+    | `Null -> None
+    | js ->
+      failwith
+        (Printf.sprintf "Bitcoin.gettxout: unknown json reply: %s" (Yojson.Safe.to_string js))
 
   let gettxoutsetinfo ?conn () = invoke ?conn "gettxoutsetinfo" >|= to_assoc
 

@@ -143,7 +143,7 @@ module type ENGINE = sig
   val getrawmempool_verbose : ?conn:conn_t -> unit -> assoc_t monad_t
 
   (** Returns detailed information concerning a given unspent transaction output. *)
-  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t monad_t
+  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t option monad_t
 
   (** Returns some statistics about the current set of unspent transaction outputs. *)
   val gettxoutsetinfo : ?conn:conn_t -> unit -> assoc_t monad_t
