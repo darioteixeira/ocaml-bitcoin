@@ -1,18 +1,18 @@
 open! Core
 open! Async
 
-module Mainnet_connection = struct
+module Testnet_connection = struct
   let default =
     Some
       { Bitcoin.inet_addr = Unix.Inet_addr.localhost;
         host = "my-ip";
-        port = 8332;
+        port = 18332;
         username = "my-username";
         password = "my-password"
       }
 end
 
-module Mainnet = Bitcoin.Make (Bitcoin_cohttp_async.Httpclient) (Mainnet_connection)
+module Mainnet = Bitcoin.Make (Bitcoin_cohttp_async.Httpclient) (Testnet_connection)
 
 let cmd =
   (*let open Command.Let_syntax in*)
