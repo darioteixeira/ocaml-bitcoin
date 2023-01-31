@@ -40,12 +40,13 @@
   (cohttp-async
    (>= 5.0.0))))
 
-(package
- (name bitcoin-ocamlnet)
- (synopsis "Bitcoin Client API ocamlnet interface")
- (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
- (description "The ocamlnet I/O interface to the bitcoin client")
- (depends bitcoin ocamlnet))
+;; XXX: disabling ocamlnet because it doesn't support OCaml 5.0.0 yet --mbacarella
+;(package
+; (name bitcoin-ocamlnet)
+; (synopsis "Bitcoin Client API ocamlnet interface")
+; (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
+; (description "The ocamlnet I/O interface to the bitcoin client")
+; (depends bitcoin ocamlnet))
 
 (package
  (name bitcoin-ocurl)
@@ -54,7 +55,7 @@
  (description "The ocurl I/O interface to the bitcoin client")
  (depends bitcoin ocurl))
 
-;; XXX: not familiar enough with ocsigen to get this to build -- mbacarella
+;; XXX: not familiar enough with ocsigen to get this to build --mbacarella
 ;(package
 ; (name bitcoin-ocsigen)
 ; (synopsis "Bitcoin Client API ocsigen interface")
