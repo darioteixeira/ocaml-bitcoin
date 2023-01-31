@@ -83,8 +83,13 @@ module type ENGINE = sig
   type 'a monad_t
 
   val getbestblockhash : ?conn:conn_t -> unit -> blkhash_t monad_t
-  val getblock : ?conn:conn_t -> blkhash_t -> hexblk_t monad_t
-  val getblock_verbose : ?conn:conn_t -> blkhash_t -> assoc_t monad_t
+
+  val getblock
+    :  ?verbosity:int ->
+    ?conn:conn_t ->
+    blkhash_t ->
+    [ `hexblk of hexblk_t | `assoc of assoc_t ] monad_t
+
   val getblockchaininfo : ?conn:conn_t -> unit -> assoc_t monad_t
   val getblockcount : ?conn:conn_t -> unit -> int monad_t
   val getblockhash : ?conn:conn_t -> int -> blkhash_t monad_t
@@ -93,7 +98,7 @@ module type ENGINE = sig
   val getmempoolinfo : ?conn:conn_t -> unit -> assoc_t monad_t
   val getrawmempool : ?conn:conn_t -> unit -> txid_t list monad_t
   val getrawmempool_verbose : ?conn:conn_t -> unit -> assoc_t monad_t
-  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t monad_t
+  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t option monad_t
   val gettxoutsetinfo : ?conn:conn_t -> unit -> assoc_t monad_t
   val verifychain : ?conn:conn_t -> ?checklevel:int -> ?numblocks:int -> unit -> bool monad_t
   val stop : ?conn:conn_t -> unit -> unit monad_t
@@ -464,11 +469,12 @@ module Make (Httpclient : HTTPCLIENT) (Connection : CONNECTION) :
 
   let getbestblockhash ?conn () = invoke ?conn "getbestblockhash" >|= to_string
 
-  let getblock ?conn hash =
-    invoke ?conn ~params:[ of_string hash; of_bool false ] "getblock" >|= to_string
-
-  let getblock_verbose ?conn hash =
-    invoke ?conn ~params:[ of_string hash; of_bool true ] "getblock" >|= to_assoc
+  let getblock ?(verbosity = 0) ?conn hash =
+    invoke ?conn ~params:[ of_string hash; of_int verbosity ] "getblock"
+    >|= fun res ->
+    match verbosity with
+    | 0 -> `hexblk (to_string res)
+    | _ -> `assoc (to_assoc res)
 
   let getblockchaininfo ?conn () = invoke ?conn "getblockchaininfo" >|= to_assoc
   let getblockcount ?conn () = invoke ?conn "getblockcount" >|= to_int
@@ -485,7 +491,13 @@ module Make (Httpclient : HTTPCLIENT) (Connection : CONNECTION) :
 
   let gettxout ?conn ?(includemempool = true) (txid, num) =
     invoke ?conn ~params:[ of_string txid; of_int num; of_bool includemempool ] "gettxout"
-    >|= to_assoc
+    >|= fun js ->
+    match js with
+    | `Assoc ks -> Some ks
+    | `Null -> None
+    | js ->
+      failwith
+        (Printf.sprintf "Bitcoin.gettxout: unknown json reply: %s" (Yojson.Safe.to_string js))
 
   let gettxoutsetinfo ?conn () = invoke ?conn "gettxoutsetinfo" >|= to_assoc
 

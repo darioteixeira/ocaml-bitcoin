@@ -109,11 +109,14 @@ module type ENGINE = sig
   (** Returns the block hash for the head block in the best block chain. *)
   val getbestblockhash : ?conn:conn_t -> unit -> blkhash_t monad_t
 
-  (** Returns the hex-encoded, serialised data for the block with the given block hash. *)
-  val getblock : ?conn:conn_t -> blkhash_t -> hexblk_t monad_t
-
-  (** Returns the available data for the block with the given block hash. *)
-  val getblock_verbose : ?conn:conn_t -> blkhash_t -> assoc_t monad_t
+  (** Returns the hex-encoded, serialised data for the block with the given block hash
+      when verbosity=0 (the default). For verbosity=1 or verbosity=2, returns an assoc
+      list. *)
+  val getblock
+    :  ?verbosity:int ->
+    ?conn:conn_t ->
+    blkhash_t ->
+    [ `hexblk of hexblk_t | `assoc of assoc_t ] monad_t
 
   (** Returns information concerning the current state of the block chain. *)
   val getblockchaininfo : ?conn:conn_t -> unit -> assoc_t monad_t
@@ -140,7 +143,7 @@ module type ENGINE = sig
   val getrawmempool_verbose : ?conn:conn_t -> unit -> assoc_t monad_t
 
   (** Returns detailed information concerning a given unspent transaction output. *)
-  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t monad_t
+  val gettxout : ?conn:conn_t -> ?includemempool:bool -> txoutput_t -> assoc_t option monad_t
 
   (** Returns some statistics about the current set of unspent transaction outputs. *)
   val gettxoutsetinfo : ?conn:conn_t -> unit -> assoc_t monad_t
