@@ -1,4 +1,4 @@
-unreleased to opam
+Version 3.0 (2023-02-01)
 ========================
 * Port to dune
 * Separate each I/O interface into distinct opam packages
