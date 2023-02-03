@@ -21,7 +21,10 @@
  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
  (description
   "An OCaml interface to the official Bitcoin client API.\n   Works by making JSON-RPC calls over the network to a running\n   Bitcoin daemon\n  fering the client API.")
- (depends cryptokit yojson))
+ (depends
+  cryptokit
+  (yojson
+   (>= 1.6.0))))
 
 (package
  (name bitcoin-cohttp-lwt)

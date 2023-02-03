@@ -17,7 +17,7 @@ bug-reports: "https://github.com/darioteixeira/ocaml-bitcoin/issues"
 depends: [
   "dune" {>= "2.8"}
   "cryptokit"
-  "yojson"
+  "yojson" {>= "1.6.0"}
   "odoc" {with-doc}
 ]
 build: [
