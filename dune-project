@@ -31,7 +31,11 @@
  (synopsis "Bitcoin Client API cohttp-lwt interface")
  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
  (description "This is the cohttp-lwt I/O interface to the bitcoin client")
- (depends bitcoin cohttp-lwt cohttp-lwt-unix))
+ (depends
+  (bitcoin
+   (= :version))
+  cohttp-lwt
+  cohttp-lwt-unix))
 
 (package
  (name bitcoin-cohttp-async)
@@ -39,7 +43,8 @@
  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
  (description "This is the cohttp-async I/O interface to the bitcoin client")
  (depends
-  bitcoin
+  (bitcoin
+   (= :version))
   (cohttp-async
    (>= 5.0.0))))
 
@@ -56,7 +61,10 @@
  (synopsis "Bitcoin Client API ocurl interface")
  (license "LGPL-2.1-only WITH OCaml-LGPL-linking-exception")
  (description "The ocurl I/O interface to the bitcoin client")
- (depends bitcoin ocurl))
+ (depends
+  (bitcoin
+   (= :version))
+  ocurl))
 
 ;; XXX: not familiar enough with ocsigen to get this to build --mbacarella
 ;(package
