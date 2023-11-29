@@ -1,9 +1,3 @@
-(********************************************************************************)
-(*  Account.ml
-    Copyright (c) 2016 Dario Teixeira <dario.teixeira@nleyten.com>
-*)
-(********************************************************************************)
-
 (*  This example displays the balance of the various users accounts, plus the
     overall balance.  Note that the connection to Bitcoin's Testnet is done
     using the Cohttp backend.  In practice this means that all API invocations

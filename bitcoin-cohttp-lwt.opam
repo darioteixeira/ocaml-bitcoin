@@ -3,10 +3,10 @@ opam-version: "2.0"
 synopsis: "Bitcoin Client API cohttp-lwt interface"
 description: "This is the cohttp-lwt I/O interface to the bitcoin client"
 maintainer: [
-  "Dario Teixeira <dario.teixeira@nleyten.com>"
+  "Dario Teixeira <dario.teixeira@yahoo.com>"
   "Michael Bacarella <m@bacarella.com>"
 ]
-authors: ["Dario Teixeira <dario.teixeira@nleyten.com>"]
+authors: ["Dario Teixeira <dario.teixeira@yahoo.com>"]
 license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 homepage: "https://github.com/darioteixeira/ocaml-bitcoin"
 bug-reports: "https://github.com/darioteixeira/ocaml-bitcoin/issues"

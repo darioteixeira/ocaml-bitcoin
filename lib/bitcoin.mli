@@ -1,9 +1,3 @@
-(********************************************************************************)
-(*  Bitcoin.mli
-    Copyright (c) 2012-2015 Dario Teixeira <dario.teixeira@nleyten.com>
-*)
-(********************************************************************************)
-
 (** OCaml interface to the official Bitcoin client API.
 *)
 

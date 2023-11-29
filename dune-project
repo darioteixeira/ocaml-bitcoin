@@ -2,10 +2,10 @@
 
 (name bitcoin)
 
-(authors "Dario Teixeira <dario.teixeira@nleyten.com>")
+(authors "Dario Teixeira <dario.teixeira@yahoo.com>")
 
 (maintainers
- "Dario Teixeira <dario.teixeira@nleyten.com>"
+ "Dario Teixeira <dario.teixeira@yahoo.com>"
  "Michael Bacarella <m@bacarella.com>")
 
 (source

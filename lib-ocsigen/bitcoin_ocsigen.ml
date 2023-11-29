@@ -1,9 +1,3 @@
-(********************************************************************************)
-(*  Bitcoin_ocsigen.ml
-    Copyright (c) 2012-2015 Dario Teixeira <dario.teixeira@nleyten.com>
-*)
-(********************************************************************************)
-
 (** Offers an implementation of a {!Bitcoin.HTTPCLIENT} using Ocsigen's
     [Ocsigen_http_client].
 *)

@@ -1,9 +1,3 @@
-(********************************************************************************)
-(*  Info.ml
-    Copyright (c) 2016 Dario Teixeira <dario.teixeira@nleyten.com>
-*)
-(********************************************************************************)
-
 (*  Minimal example illustrating how to setup a connection with Bitcoin's Testnet
     (the test network whose coins have by convention no monetary value) and request
     some information about the network.  Note that OCamlnet's HTTP client is used
